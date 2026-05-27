@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/cuneyt_yavuz/Dev -maxdepth 3 -type f \\\\\\( -name \"requirements.txt\" -o -name \"pyproject.toml\" -o -name \"package.json\" \\\\\\) 2>/dev/null | head -20)",
+      "Read(//Users/cuneyt_yavuz/Dev/**)",
+      "Bash(pip show *)",
+      "Bash(npm --version)",
+      "Bash(pip list *)",
+      "Bash(python3 -m venv --help)"
+    ]
+  }
+}
