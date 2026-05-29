@@ -22,3 +22,16 @@ from .documents import (
     ProjectDocumentListCreateView, GenerateDocumentView,
     DocumentDetailView, DocumentExportView,
 )
+from .drugs import (
+    DrugSearchView, DrugDetailView, DrugSynthesisView,
+    DrugTrialsView, DrugPatentsView,
+)
+from .patents import PatentSearchView, PatentDetailView
+from .analogs import (
+    AnalogSearchView, AnalogPatentCheckView, AnalogADMETView,
+    InvestigationListCreateView, InvestigationDetailView, InvestigationLinkProjectView,
+    AnalogCandidateView, AnalogCandidateDetailView,
+)
+from .synthesis_plans import (
+    SynthesisPlanListCreateView, SynthesisPlanDetailView, SynthesisPlanExperimentsView,
+)

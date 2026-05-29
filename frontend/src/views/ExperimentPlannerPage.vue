@@ -75,6 +75,12 @@ const submit = async () => {
   <div style="max-width:800px">
     <PageHeader title="New Experiment">
       <template #actions>
+        <RouterLink
+          v-if="form.project"
+          :to="`/projects/${form.project}/edit`"
+          class="btn btn-secondary btn-sm"
+          style="display:inline-flex;align-items:center;gap:6px"
+        >← Back to Project</RouterLink>
         <button class="btn btn-primary" :disabled="saving" @click="submit">
           {{ saving ? 'Saving...' : 'Create Experiment' }}
         </button>

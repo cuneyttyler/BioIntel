@@ -19,6 +19,8 @@ TTL_MAP = {
     'dailymed': 3 * 24 * 3600,
     'askcos': 24 * 3600,
     'nist': 30 * 24 * 3600,
+    'surechembl': 30 * 24 * 3600,
+    'espacenet': 30 * 24 * 3600,
 }
 
 

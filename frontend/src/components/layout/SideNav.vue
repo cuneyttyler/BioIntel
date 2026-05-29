@@ -37,5 +37,12 @@ onMounted(() => projectStore.fetchProjects())
       <div class="nav-section-label">AI Assistant</div>
       <RouterLink class="nav-link" to="/chat">💬 Chat</RouterLink>
     </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Drug Discovery</div>
+      <RouterLink class="nav-link" to="/drugs">🔬 Drug Intelligence</RouterLink>
+      <RouterLink class="nav-link" to="/patents">📜 Patent Explorer</RouterLink>
+      <RouterLink class="nav-link" to="/analogs">🧪 Analog Workspace</RouterLink>
+    </div>
   </nav>
 </template>

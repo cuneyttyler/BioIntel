@@ -33,9 +33,10 @@ class ConditionRecommendView(APIView):
     def post(self, request):
         reactants = request.data.get('reactants', '')
         products = request.data.get('products', '')
-        if not reactants or not products:
-            return Response({'error': 'reactants and products required'}, status=400)
-        return Response(askcos.recommend_conditions(reactants, products))
+        reaction_type = request.data.get('reaction_type', '')
+        if not reactants and not reaction_type:
+            return Response({'error': 'reactants or reaction_type required'}, status=400)
+        return Response(askcos.recommend_conditions(reactants, products, reaction_type))
 
 
 class BuyableCheckView(APIView):

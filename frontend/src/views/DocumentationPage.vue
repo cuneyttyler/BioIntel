@@ -90,6 +90,7 @@ const openDoc = (doc) => {
             <option value="process_summary">Process Summary</option>
             <option value="risk_report">Risk Report</option>
             <option value="handoff">Handoff Note</option>
+            <option value="analog_report">Analog Development Report</option>
           </select>
         </div>
         <button class="btn btn-primary w-full" :disabled="generating" @click="generateDoc">

@@ -70,6 +70,12 @@ const decisionColors = { optimize: 'primary', reproduce: 'purple', scale: 'green
           <span :class="['badge', `badge-${expStore.currentExperiment.status}`]">
             {{ expStore.currentExperiment.status }}
           </span>
+          <RouterLink
+            v-if="expStore.currentExperiment.project"
+            :to="`/projects/${expStore.currentExperiment.project}/edit`"
+            class="btn btn-secondary btn-sm"
+            style="display:inline-flex;align-items:center;gap:6px"
+          >← Back to Project</RouterLink>
         </template>
       </PageHeader>
 

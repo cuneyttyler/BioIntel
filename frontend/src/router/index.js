@@ -13,6 +13,12 @@ const routes = [
   { path: '/literature', name: 'Literature', component: () => import('@/views/LiteraturePage.vue') },
   { path: '/chat', name: 'Chat', component: () => import('@/views/ChatPage.vue') },
   { path: '/projects/:id/documents', name: 'Documentation', component: () => import('@/views/DocumentationPage.vue') },
+  { path: '/drugs', name: 'DrugIntelligence', component: () => import('@/views/DrugIntelligencePage.vue') },
+  { path: '/drugs/:chembl_id', name: 'DrugProfile', component: () => import('@/views/DrugProfilePage.vue') },
+  { path: '/patents', name: 'PatentExplorer', component: () => import('@/views/PatentExplorerPage.vue') },
+  { path: '/analogs', name: 'AnalogWorkspace', component: () => import('@/views/AnalogWorkspacePage.vue') },
+  { path: '/investigations/:id', name: 'Investigation', component: () => import('@/views/AnalogWorkspacePage.vue') },
+  { path: '/synthesis/compare', name: 'SynthesisPlanComparison', component: () => import('@/views/SynthesisPlanComparisonPage.vue') },
 ]
 
 export default createRouter({

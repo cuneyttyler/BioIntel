@@ -57,22 +57,28 @@ def structure_png_url(cid: int) -> str:
     return f'{BASE}/compound/cid/{cid}/PNG'
 
 
-def get_similar_compounds(smiles: str, threshold: int = 90) -> list:
-    key = make_cache_key('similar', {'smiles': smiles, 'threshold': threshold})
+def get_similar_compounds(smiles: str, threshold: float = 0.9) -> list:
+    """threshold is 0.0–1.0; PubChem expects integer 0–100."""
+    threshold_pct = int(float(threshold) * 100)
+    key = make_cache_key('similar', {'smiles': smiles, 'threshold': threshold_pct})
     cached = get_cached(SOURCE, key)
     if cached is not None:
         return cached
 
     try:
-        encoded = requests.utils.quote(smiles)
+        encoded = requests.utils.quote(smiles, safe='')
         r = requests.get(
             f'{BASE}/compound/fastsimilarity_2d/smiles/{encoded}/cids/JSON',
-            params={'Threshold': threshold},
-            timeout=15,
+            params={'Threshold': threshold_pct},
+            timeout=30,
         )
         r.raise_for_status()
         cids = r.json().get('IdentifierList', {}).get('CID', [])[:20]
-        set_cached(SOURCE, key, cids)
-        return cids
+        if not cids:
+            set_cached(SOURCE, key, [])
+            return []
+        props = get_properties_batch(cids)
+        set_cached(SOURCE, key, props)
+        return props
     except Exception:
         return []

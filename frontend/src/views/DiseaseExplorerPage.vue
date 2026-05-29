@@ -1,9 +1,11 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { diseases as diseasesApi, targets as targetsApi } from '@/services/api'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
+const router = useRouter()
 const query = ref('')
 const searchResults = ref([])
 const selectedDisease = ref(null)
@@ -37,7 +39,7 @@ const selectDisease = async (disease) => {
     diseasesApi.drugs(disease.id),
   ])
   diseaseTargets.value = t.value?.associatedTargets?.rows || []
-  diseaseDrugs.value = d.value?.knownDrugs?.rows || []
+  diseaseDrugs.value = d.value?.drugAndClinicalCandidates?.rows || []
   loading.value = false
 }
 
@@ -110,12 +112,11 @@ const showTarget = async (target) => {
           <div class="card-title">Known Drugs ({{ diseaseDrugs.length }})</div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Drug</th><th>Phase</th><th>Status</th></tr></thead>
+              <thead><tr><th>Drug</th><th>Stage</th></tr></thead>
               <tbody>
-                <tr v-for="row in diseaseDrugs" :key="row.drug.id">
+                <tr v-for="row in diseaseDrugs" :key="row.drug.id" style="cursor:pointer" @click="router.push(`/drugs/${row.drug.id}`)">
                   <td><strong>{{ row.drug.name }}</strong></td>
-                  <td><span class="badge badge-phase1">Phase {{ row.phase }}</span></td>
-                  <td class="text-sm">{{ row.status || '—' }}</td>
+                  <td><span class="badge badge-phase1">{{ row.maxClinicalStage?.replace('_', ' ') || '—' }}</span></td>
                 </tr>
               </tbody>
             </table>

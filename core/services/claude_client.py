@@ -3,7 +3,7 @@ import anthropic
 from django.conf import settings
 
 from . import pubchem, chembl, opentargets, uniprot, pkcsm, comptox
-from . import openfda, dailymed, clinicaltrials, pubmed, askcos, nist
+from . import openfda, dailymed, clinicaltrials, pubmed, askcos, nist, surechembl
 
 MODEL = 'claude-sonnet-4-6'
 
@@ -158,6 +158,29 @@ TOOL_DEFINITIONS = [
             'required': ['topic'],
         },
     },
+    {
+        'name': 'search_patents',
+        'description': 'Search SureChEMBL for patents covering a drug by name or SMILES structure. Use when asked about patent landscape, freedom-to-operate, or patent expiry for a compound.',
+        'input_schema': {
+            'type': 'object',
+            'properties': {
+                'query': {'type': 'string', 'description': 'Drug name or SMILES string to search patents for'},
+                'mode': {'type': 'string', 'enum': ['name', 'smiles'], 'description': 'Whether to search by drug name or SMILES structure'},
+            },
+            'required': ['query', 'mode'],
+        },
+    },
+    {
+        'name': 'get_drug_profile',
+        'description': 'Get the full profile of an existing approved drug by ChEMBL ID: molecular structure, mechanism of action, and approval status.',
+        'input_schema': {
+            'type': 'object',
+            'properties': {
+                'chembl_id': {'type': 'string', 'description': 'ChEMBL ID of the drug, e.g. CHEMBL1431 for metformin'},
+            },
+            'required': ['chembl_id'],
+        },
+    },
 ]
 
 
@@ -208,6 +231,14 @@ def _dispatch_tool(name: str, inputs: dict) -> dict:
             return {'jcamp': spectrum[:500] if spectrum else '', 'available': bool(spectrum)}
         elif name == 'search_fda_guidance':
             return {'results': openfda.search_guidance(inputs['topic'])}
+        elif name == 'search_patents':
+            if inputs.get('mode') == 'smiles':
+                return {'results': surechembl.search_by_smiles(inputs['query'])}
+            return {'results': surechembl.search_compound(inputs['query'])}
+        elif name == 'get_drug_profile':
+            mol = chembl.get_molecule(inputs['chembl_id'])
+            mech = chembl.get_mechanisms(inputs['chembl_id'])
+            return {'molecule': mol, 'mechanisms': mech}
         else:
             return {'error': f'Unknown tool: {name}'}
     except Exception as e:

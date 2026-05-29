@@ -16,6 +16,12 @@ from core.views import (
     ChatSessionListCreateView, ChatSessionDetailView, ChatMessageView,
     ProjectDocumentListCreateView, GenerateDocumentView,
     DocumentDetailView, DocumentExportView,
+    DrugSearchView, DrugDetailView, DrugSynthesisView, DrugTrialsView, DrugPatentsView,
+    PatentSearchView, PatentDetailView,
+    AnalogSearchView, AnalogPatentCheckView, AnalogADMETView,
+    InvestigationListCreateView, InvestigationDetailView, InvestigationLinkProjectView,
+    AnalogCandidateView, AnalogCandidateDetailView,
+    SynthesisPlanListCreateView, SynthesisPlanDetailView, SynthesisPlanExperimentsView,
 )
 
 urlpatterns = [
@@ -79,4 +85,30 @@ urlpatterns = [
     # Documents
     path('documents/<int:pk>/', DocumentDetailView.as_view()),
     path('documents/<int:pk>/export/', DocumentExportView.as_view()),
+
+    # Drug Intelligence
+    path('drugs/search/', DrugSearchView.as_view()),
+    path('drugs/<str:chembl_id>/synthesis/', DrugSynthesisView.as_view()),
+    path('drugs/<str:chembl_id>/trials/', DrugTrialsView.as_view()),
+    path('drugs/<str:chembl_id>/patents/', DrugPatentsView.as_view()),
+    path('drugs/<str:chembl_id>/', DrugDetailView.as_view()),
+
+    # Patents
+    path('patents/', PatentSearchView.as_view()),
+    path('patents/<str:patent_number>/', PatentDetailView.as_view()),
+
+    # Analogs & Investigations
+    path('analogs/search/', AnalogSearchView.as_view()),
+    path('analogs/patent-check/', AnalogPatentCheckView.as_view()),
+    path('analogs/admet/', AnalogADMETView.as_view()),
+    path('investigations/', InvestigationListCreateView.as_view()),
+    path('investigations/<int:pk>/', InvestigationDetailView.as_view()),
+    path('investigations/<int:pk>/link-project/', InvestigationLinkProjectView.as_view()),
+    path('investigations/<int:pk>/candidates/', AnalogCandidateView.as_view()),
+    path('analog-candidates/<int:pk>/', AnalogCandidateDetailView.as_view()),
+
+    # Synthesis Plans
+    path('synthesis-plans/', SynthesisPlanListCreateView.as_view()),
+    path('synthesis-plans/<int:pk>/', SynthesisPlanDetailView.as_view()),
+    path('synthesis-plans/<int:pk>/plan-experiments/', SynthesisPlanExperimentsView.as_view()),
 ]

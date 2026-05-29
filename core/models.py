@@ -64,6 +64,41 @@ class CompoundProperty(models.Model):
         return f"{self.compound.name} — {self.property_type}"
 
 
+class SynthesisPlan(models.Model):
+    PLAN_TYPE_CHOICES = [
+        ('retro', 'Single-Step Retro'),
+        ('tree', 'Multi-Step Tree'),
+    ]
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='synthesis_plans')
+    analog_candidate = models.ForeignKey(
+        'AnalogCandidate', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='synthesis_plans',
+    )
+    target_smiles = models.TextField()
+    plan_type = models.CharField(max_length=10, choices=PLAN_TYPE_CHOICES, default='retro')
+    route_data = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['analog_candidate', 'plan_type'],
+                condition=models.Q(analog_candidate__isnull=False),
+                name='unique_plan_type_per_analog',
+            )
+        ]
+
+    def __str__(self):
+        return f"SynthesisPlan({self.plan_type}) for project {self.project_id}"
+
+
 class Experiment(models.Model):
     TYPE_CHOICES = [
         ('formulation', 'Formulation'),
@@ -80,6 +115,7 @@ class Experiment(models.Model):
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='experiments')
     compound = models.ForeignKey(Compound, on_delete=models.SET_NULL, null=True, blank=True, related_name='experiments')
+    synthesis_plan = models.ForeignKey('SynthesisPlan', on_delete=models.SET_NULL, null=True, blank=True, related_name='experiments')
     title = models.CharField(max_length=255)
     experiment_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
     objective = models.TextField()
@@ -127,6 +163,7 @@ class Document(models.Model):
         ('process_summary', 'Process Summary'),
         ('risk_report', 'Risk Report'),
         ('handoff', 'Handoff Note'),
+        ('analog_report', 'Analog Development Report'),
     ]
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='documents')
@@ -165,6 +202,44 @@ class ChatMessage(models.Model):
         return f"{self.role}: {self.content[:50]}"
 
 
+class DrugInvestigation(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='investigations')
+    chembl_id = models.CharField(max_length=20)
+    name = models.CharField(max_length=255)
+    smiles = models.TextField(blank=True)
+    disease_name = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.chembl_id})"
+
+
+class AnalogCandidate(models.Model):
+    PATENT_STATUS_CHOICES = [
+        ('free', 'Free to Operate'),
+        ('covered', 'Patent Covered'),
+        ('unknown', 'Unknown'),
+    ]
+
+    investigation = models.ForeignKey(DrugInvestigation, on_delete=models.CASCADE, related_name='candidates')
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='analog_candidates')
+    smiles = models.TextField()
+    pubchem_cid = models.IntegerField(null=True, blank=True)
+    chembl_id = models.CharField(max_length=20, blank=True)
+    similarity_score = models.FloatField(default=0.0)
+    patent_status = models.CharField(max_length=20, choices=PATENT_STATUS_CHOICES, default='unknown')
+    patent_refs = models.JSONField(default=list)
+    admet_data = models.JSONField(default=dict)
+    shortlisted = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Analog {self.pubchem_cid or self.smiles[:20]} (score={self.similarity_score:.2f})"
+
+
 class ExternalDataCache(models.Model):
     SOURCE_CHOICES = [
         ('pubchem', 'PubChem'),
@@ -180,6 +255,8 @@ class ExternalDataCache(models.Model):
         ('askcos', 'ASKCOS'),
         ('nist', 'NIST WebBook'),
         ('openfda_guidance', 'OpenFDA Guidance'),
+        ('surechembl', 'SureChEMBL'),
+        ('espacenet', 'Espacenet'),
     ]
 
     source = models.CharField(max_length=30, choices=SOURCE_CHOICES)

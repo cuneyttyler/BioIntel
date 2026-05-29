@@ -25,7 +25,7 @@ def get_molecule(chembl_id: str) -> dict:
 
 
 def search_molecule(name: str) -> list:
-    data = _get('molecule.json', {'molecule_synonyms__synonym__icontains': name, 'limit': 10})
+    data = _get('molecule/search.json', {'q': name, 'limit': 10})
     return data.get('molecules', [])
 
 

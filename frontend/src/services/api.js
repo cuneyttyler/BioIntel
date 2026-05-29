@@ -20,6 +20,7 @@ export const compounds = {
   create: (data) => api.post('/compounds/', data),
   get: (id) => api.get(`/compounds/${id}/`),
   list: (projectId) => api.get('/compounds/', { params: { project_id: projectId } }),
+  delete: (id) => api.delete(`/compounds/${id}/`),
   properties: (id) => api.get(`/compounds/${id}/properties/`),
   admet: (id) => api.get(`/compounds/${id}/admet/`),
   safety: (id) => api.get(`/compounds/${id}/safety/`),
@@ -89,6 +90,49 @@ export const documents = {
   get: (id) => api.get(`/documents/${id}/`),
   update: (id, data) => api.put(`/documents/${id}/`, data),
   exportUrl: (id) => `/api/documents/${id}/export/`,
+}
+
+export const drugs = {
+  search: (q) => api.get('/drugs/search/', { params: { q } }),
+  get: (chemblId) => api.get(`/drugs/${chemblId}/`),
+  synthesis: (chemblId) => api.get(`/drugs/${chemblId}/synthesis/`),
+  trials: (chemblId) => api.get(`/drugs/${chemblId}/trials/`),
+  patents: (chemblId) => api.get(`/drugs/${chemblId}/patents/`),
+}
+
+export const patents = {
+  search: (q, smiles) => api.get('/patents/', { params: { q, smiles } }),
+  get: (patentNumber) => api.get(`/patents/${encodeURIComponent(patentNumber)}/`),
+}
+
+export const analogs = {
+  search: (smiles, threshold) => api.post('/analogs/search/', { smiles, threshold }),
+  patentCheck: (candidates) => api.post('/analogs/patent-check/', { candidates }),
+  admet: (smiles_list) => api.post('/analogs/admet/', { smiles_list }),
+}
+
+export const investigations = {
+  list: () => api.get('/investigations/'),
+  create: (data) => api.post('/investigations/', data),
+  get: (id) => api.get(`/investigations/${id}/`),
+  update: (id, data) => api.put(`/investigations/${id}/`, data),
+  candidates: (id) => api.get(`/investigations/${id}/candidates/`),
+  addCandidate: (id, data) => api.post(`/investigations/${id}/candidates/`, data),
+  linkProject: (id, projectId, linkShortlisted = true) =>
+    api.post(`/investigations/${id}/link-project/`, { project: projectId, link_shortlisted: linkShortlisted }),
+}
+
+export const synthesisPlan = {
+  list: (params) => api.get('/synthesis-plans/', { params: typeof params === 'object' ? params : { project: params } }),
+  create: (data) => api.post('/synthesis-plans/', data),
+  get: (id) => api.get(`/synthesis-plans/${id}/`),
+  update: (id, data) => api.patch(`/synthesis-plans/${id}/`, data),
+  delete: (id) => api.delete(`/synthesis-plans/${id}/`),
+  planExperiments: (id) => api.post(`/synthesis-plans/${id}/plan-experiments/`),
+}
+
+export const analogCandidates = {
+  update: (id, data) => api.patch(`/analog-candidates/${id}/`, data),
 }
 
 export async function* createSSEStream(url, options = {}) {

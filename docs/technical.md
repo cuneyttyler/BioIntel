@@ -712,3 +712,769 @@ External API calls are expensive in latency and subject to rate limits. All resp
 | NIST WebBook | 30 days |
 
 In production, replace the DB cache table with **Redis** and use `django-redis` as the cache backend. Compound structure images are stored as static files rather than re-fetched on every request.
+
+---
+
+## UPDATE 1 — Competitive Drug Intelligence & Analog Development
+
+Technical additions required to implement the workflow defined in `product.md` UPDATE 1.
+
+---
+
+### New External API Services
+
+#### `core/services/surechembl.py`
+
+Primary patent data source. SureChEMBL (EMBL-EBI) is a free, structure-searchable patent chemistry database covering 17M+ patent compounds.
+
+| Field | Detail |
+|---|---|
+| **Base URL** | `https://www.surechembl.org/api/v1` |
+| **Authentication** | None (public) |
+| **Cache TTL** | 30 days |
+| **Source key** | `surechembl` |
+
+Key functions:
+```python
+def search_compound(name: str) -> list          # name → SureChEMBL compound list
+def get_compound_patents(schembl_id: str) -> list  # patents for a compound ID
+def search_by_smiles(smiles: str) -> list        # structure search → matching patent compounds
+```
+
+Each patent document returned contains: `patent_number`, `title`, `abstract`, `filing_date`, `publication_date`, `assignee`, `ipc_classes`. Patent expiry is derived as `filing_date + 20 years` (standard term).
+
+#### `core/services/espacenet.py` (supplementary)
+
+EPO's Open Patent Services (OPS) REST API for full patent text and claim language when SureChEMBL surfaces a relevant patent number.
+
+| Field | Detail |
+|---|---|
+| **Base URL** | `https://ops.epo.org/3.2/rest-services` |
+| **Authentication** | OAuth2 client credentials (free registration at EPO) |
+| **Cache TTL** | 30 days |
+| **Source key** | `espacenet` |
+
+Key functions:
+```python
+def get_patent(patent_number: str) -> dict   # full patent: title, abstract, claims, status
+def search_patents(query: str) -> list       # keyword/name patent search
+```
+
+Used only to retrieve claim text after SureChEMBL identifies a patent number. Not used as a primary search surface.
+
+---
+
+### New Database Models
+
+Add to `core/models.py`:
+
+#### `DrugInvestigation`
+
+Persists a scientist's intelligence-gathering session on a reference drug. Not linked to a project — this is discovery-mode work that precedes project creation.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | |
+| chembl_id | VARCHAR(20) | e.g. `CHEMBL25` |
+| name | VARCHAR(255) | Common name |
+| smiles | TEXT | Reference drug SMILES |
+| disease_name | VARCHAR(255) | Disease context for this investigation |
+| notes | TEXT | Scientist's free-text notes |
+| created_at | DATETIME | auto_now_add |
+| updated_at | DATETIME | auto_now |
+
+#### `AnalogCandidate`
+
+A structural analog candidate identified during an investigation, with patent and ADMET assessment results.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | |
+| investigation_id | INTEGER FK → drug_investigations | |
+| smiles | TEXT | Candidate SMILES |
+| pubchem_cid | INTEGER | nullable |
+| chembl_id | VARCHAR(20) | nullable |
+| similarity_score | FLOAT | 0–1 Tanimoto similarity to reference |
+| patent_status | VARCHAR(20) | `free` / `covered` / `unknown` |
+| patent_refs | JSON | List of patent numbers that cover this structure |
+| admet_data | JSON | pkCSM prediction output |
+| shortlisted | BOOLEAN | default False |
+| notes | TEXT | |
+| created_at | DATETIME | auto_now_add |
+
+---
+
+### New Backend Views
+
+Create `core/views/drugs.py`:
+
+| View | Method | Description |
+|---|---|---|
+| `DrugSearchView` | GET | ChEMBL molecule search by name → returns ChEMBL ID, SMILES, approval status |
+| `DrugDetailView` | GET | Aggregate profile: ChEMBL (structure + mechanism) + DailyMed (formulation) |
+| `DrugSynthesisView` | GET | PubMed search for published synthesis routes for the drug name |
+| `DrugTrialsView` | GET | ClinicalTrials.gov search filtered by drug name as intervention |
+| `DrugPatentsView` | GET | SureChEMBL compound search → patent list for the drug |
+
+Create `core/views/patents.py`:
+
+| View | Method | Description |
+|---|---|---|
+| `PatentSearchView` | GET | SureChEMBL search by drug name or SMILES |
+| `PatentDetailView` | GET | Espacenet full patent text + claims by patent number |
+
+Create `core/views/analogs.py`:
+
+| View | Method | Description |
+|---|---|---|
+| `AnalogSearchView` | POST | PubChem fingerprint similarity from reference SMILES; returns CID list with scores |
+| `AnalogPatentCheckView` | POST | For a list of SMILES, queries SureChEMBL to determine patent coverage; returns per-SMILES status |
+| `AnalogADMETView` | POST | Batch pkCSM ADMET predictions for a list of SMILES; runs concurrently via `ThreadPoolExecutor` |
+| `InvestigationListCreateView` | GET, POST | List and create `DrugInvestigation` records |
+| `InvestigationDetailView` | GET, PUT | Retrieve or update an investigation |
+| `AnalogCandidateView` | GET, POST | List and save `AnalogCandidate` records for an investigation |
+
+---
+
+### New URL Patterns
+
+Add to `core/urls.py`:
+
+```python
+# Drug Intelligence
+path('drugs/search/', DrugSearchView.as_view()),
+path('drugs/<str:chembl_id>/', DrugDetailView.as_view()),
+path('drugs/<str:chembl_id>/synthesis/', DrugSynthesisView.as_view()),
+path('drugs/<str:chembl_id>/trials/', DrugTrialsView.as_view()),
+path('drugs/<str:chembl_id>/patents/', DrugPatentsView.as_view()),
+
+# Patents
+path('patents/', PatentSearchView.as_view()),
+path('patents/<str:patent_number>/', PatentDetailView.as_view()),
+
+# Analogs
+path('analogs/search/', AnalogSearchView.as_view()),
+path('analogs/patent-check/', AnalogPatentCheckView.as_view()),
+path('analogs/admet/', AnalogADMETView.as_view()),
+
+# Investigations (persisted sessions)
+path('investigations/', InvestigationListCreateView.as_view()),
+path('investigations/<int:pk>/', InvestigationDetailView.as_view()),
+path('investigations/<int:pk>/candidates/', AnalogCandidateView.as_view()),
+```
+
+---
+
+### New Frontend Routes
+
+Add to `frontend/src/router/index.js`:
+
+```js
+{ path: '/drugs',                  component: () => import('@/views/DrugIntelligencePage.vue') },
+{ path: '/drugs/:chembl_id',       component: () => import('@/views/DrugProfilePage.vue') },
+{ path: '/patents',                component: () => import('@/views/PatentExplorerPage.vue') },
+{ path: '/analogs',                component: () => import('@/views/AnalogWorkspacePage.vue') },
+{ path: '/investigations/:id',     component: () => import('@/views/AnalogWorkspacePage.vue') },
+```
+
+---
+
+### New Frontend Pages
+
+#### `DrugIntelligencePage.vue`
+Entry point for the discovery workflow. Drug name search input → results list of matching ChEMBL entries → navigate to `DrugProfilePage` on selection.
+
+#### `DrugProfilePage.vue`
+Full reference drug profile, assembled from multiple API calls via `Promise.allSettled`:
+
+| Section | Data source |
+|---|---|
+| Structure + identity | ChEMBL (SMILES, MW, formula, approval status) |
+| Mechanism of action | ChEMBL mechanism + Open Targets target associations |
+| Formulation details | DailyMed SPL (inactive ingredients, dosage form, route) |
+| Clinical trial history | ClinicalTrials.gov filtered by drug name as intervention |
+| Synthesis literature | PubMed search: `{drug_name} synthesis` |
+| Patent landscape | SureChEMBL compound patents |
+
+Action button: **"Start Analog Search"** → creates a `DrugInvestigation` record and navigates to `AnalogWorkspacePage` pre-loaded with this drug's SMILES.
+
+#### `PatentExplorerPage.vue`
+Two search modes: by drug name (text) and by SMILES structure. Results table shows patent number, title, assignee, filing date, derived expiry date, and a "View Claims" button that fetches full text from Espacenet.
+
+#### `AnalogWorkspacePage.vue`
+Three-panel layout, representing the three stages of the analog workflow:
+
+**Panel 1 — Reference Drug**: Shows the reference SMILES, structure image, and key properties. Similarity threshold slider (default 0.7 Tanimoto).
+
+**Panel 2 — Candidate Pool**: Runs `POST /api/analogs/search/` → shows CID list with structure thumbnails and similarity scores. A "Check Patents" button runs `POST /api/analogs/patent-check/` and overlays a `free` / `covered` / `unknown` badge on each candidate. A "Run ADMET" button runs `POST /api/analogs/admet/` on all free-to-operate candidates.
+
+**Panel 3 — Shortlist**: Candidates the scientist has pinned. Side-by-side ADMET comparison table (rows = endpoints, columns = candidates + reference drug). "Save to Project" button creates a new project with the shortlisted compound.
+
+---
+
+### New Pinia Stores
+
+#### `stores/drugs.js`
+
+```js
+state: {
+  searchResults: [],      // ChEMBL drug search hits
+  selectedDrug: null,     // { chembl_id, name, smiles }
+  profile: {              // loaded asynchronously per section
+    detail: null,
+    mechanism: null,
+    formulation: null,
+    trials: [],
+    synthesis: [],
+    patents: [],
+  },
+  loading: {},
+}
+actions: searchDrugs(name), loadProfile(chembl_id)
+```
+
+#### `stores/analogs.js`
+
+```js
+state: {
+  investigation: null,    // current DrugInvestigation record
+  referenceDrug: null,    // { smiles, chembl_id, name }
+  threshold: 0.7,
+  candidates: [],         // [{ smiles, cid, score, patentStatus, admet }]
+  shortlisted: [],
+  loading: {},
+}
+actions: searchAnalogs(), checkPatents(), runADMET(), shortlist(candidate), saveToProject()
+```
+
+---
+
+### Changes to Existing Components
+
+#### `DiseaseExplorerPage.vue` / `KnownDrugsTable`
+- Drug rows in the Known Drugs table become clickable.
+- Open Targets returns `drug.id` which is already the ChEMBL ID (e.g. `CHEMBL25`).
+- `@click="router.push('/drugs/' + row.drug.id)"` — no ID mapping step required.
+
+#### `SideNav.vue`
+Add a **Drug Discovery** section below the existing navigation groups:
+```
+Drug Discovery
+  ├── Drug Intelligence   →  /drugs
+  ├── Patent Explorer     →  /patents
+  └── Analog Workspace    →  /analogs
+```
+
+#### `DocumentationPage.vue`
+Add `analog_report` to the `docType` select options. The AI generation prompt for this type should receive: reference drug name, shortlisted analog SMILES, ADMET comparison data, and patent gap summary as context.
+
+#### `claude_client.py` — new tool definitions
+Add two tools to `TOOL_DEFINITIONS` so Claude can call patent and drug intelligence data during chat:
+
+```python
+{
+  "name": "search_patents",
+  "description": "Search SureChEMBL for patents covering a drug by name or SMILES structure",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": { "type": "string", "description": "Drug name or SMILES" },
+      "mode": { "type": "string", "enum": ["name", "smiles"] }
+    },
+    "required": ["query", "mode"]
+  }
+},
+{
+  "name": "get_drug_profile",
+  "description": "Retrieve full profile for an existing approved drug by ChEMBL ID: structure, mechanism, formulation, and clinical history",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "chembl_id": { "type": "string" }
+    },
+    "required": ["chembl_id"]
+  }
+}
+```
+
+---
+
+### Updated Caching Strategy
+
+| Source | Default TTL | Notes |
+|---|---|---|
+| SureChEMBL | 30 days | Patent filings change slowly |
+| Espacenet | 30 days | Patent status is stable once retrieved |
+
+Add `surechembl` and `espacenet` to `TTL_MAP` in `core/services/cache.py`.
+
+---
+
+### New DB Migration
+
+Run after adding the two new models:
+```bash
+python manage.py makemigrations core
+python manage.py migrate
+```
+
+New tables: `core_druginvestigation`, `core_analogcandidate`.
+
+---
+
+### Implementation Order
+
+1. `core/services/surechembl.py` — patent service (no dependencies)
+2. `core/services/espacenet.py` — supplementary patent service
+3. DB models + migration (`DrugInvestigation`, `AnalogCandidate`)
+4. `core/views/drugs.py` — drug intelligence views
+5. `core/views/patents.py` — patent search views
+6. `core/views/analogs.py` — analog search, patent check, ADMET batch, investigation CRUD
+7. URL patterns in `core/urls.py`
+8. Frontend stores: `stores/drugs.js`, `stores/analogs.js`
+9. Frontend pages: `DrugIntelligencePage`, `DrugProfilePage`, `PatentExplorerPage`, `AnalogWorkspacePage`
+10. Existing component changes: `DiseaseExplorerPage`, `SideNav`, `DocumentationPage`, `claude_client.py`
+
+---
+
+## UPDATE 2 — Synthesis Planning ↔ Project Integration
+
+Implements the data model and UI changes described in `product.md` UPDATE 2. Introduces a clean `Project → SynthesisPlan → Experiment` hierarchy and links `DrugInvestigation` / `AnalogCandidate` records back to the project that spawned them.
+
+---
+
+### New Database Model
+
+#### `SynthesisPlan`
+
+Persists a designed retrosynthetic route against a project. Created when the scientist clicks "Save Route to Project" on the Synthesis Planning page. Decoupled from `Experiment` so that the designed route and the lab execution remain distinct objects.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | |
+| project_id | INTEGER FK → projects | CASCADE delete |
+| target_smiles | TEXT | Target molecule SMILES |
+| plan_type | VARCHAR(10) | `retro` (single-step) / `tree` (multi-step) |
+| route_data | JSON | Full ASKCOS API response (results array or tree) |
+| status | VARCHAR(20) | `draft` / `active` / `completed` |
+| created_at | DATETIME | auto_now_add |
+
+---
+
+### Schema Changes to Existing Models
+
+| Model | Field added | Type | Notes |
+|---|---|---|---|
+| `Experiment` | `synthesis_plan` | FK → `SynthesisPlan` | nullable, SET_NULL on delete; populated when experiments are created from a plan |
+| `DrugInvestigation` | `project` | FK → `Project` | nullable, SET_NULL; set when the investigation is linked to a project in the Analog Workspace |
+| `AnalogCandidate` | `project` | FK → `Project` | nullable, SET_NULL; set for all shortlisted candidates when linked to a project |
+
+Migration: `core/migrations/0003_synthesisplan_and_project_links.py`
+
+---
+
+### New Backend Views
+
+**File:** `core/views/synthesis_plans.py`
+
+| View | Method(s) | Endpoint | Description |
+|---|---|---|---|
+| `SynthesisPlanListCreateView` | GET, POST | `/api/synthesis-plans/` | List (filterable by `?project=ID`) or create a synthesis plan |
+| `SynthesisPlanDetailView` | GET, PATCH, DELETE | `/api/synthesis-plans/{id}/` | Retrieve, update status, or delete a plan |
+| `SynthesisPlanExperimentsView` | POST | `/api/synthesis-plans/{id}/plan-experiments/` | Creates `Experiment` records (type: synthesis) from the plan's `route_data.results`, links them via `synthesis_plan` FK, sets plan status to `active` |
+
+**Added to** `core/views/analogs.py`:
+
+| View | Method | Endpoint | Description |
+|---|---|---|---|
+| `InvestigationLinkProjectView` | POST | `/api/investigations/{id}/link-project/` | Sets `project` FK on the `DrugInvestigation` and, if `link_shortlisted=true` (default), bulk-updates all shortlisted `AnalogCandidate` records to the same project |
+
+**Changed:** `CompoundDetailView` upgraded from `RetrieveAPIView` to `RetrieveDestroyAPIView` to support `DELETE /api/compounds/{id}/` (needed when replacing a compound in an existing project from the Analog Workspace).
+
+---
+
+### New / Updated Serializers
+
+**File:** `core/serializers.py`
+
+| Serializer | Notes |
+|---|---|
+| `SynthesisPlanSerializer` | Full serializer including `experiment_count` computed field |
+| `SynthesisPlanMinimalSerializer` | Lightweight (no `route_data`) used inside `ProjectSerializer` |
+| `ProjectSerializer` | Now includes `synthesis_plans` (list of minimal plans), `investigations` (list of linked investigations), `analog_candidates` (shortlisted candidates only) |
+| `ExperimentSerializer` | `synthesis_plan` FK field exposed (nullable, not required) |
+
+---
+
+### New URL Patterns
+
+Added to `core/urls.py`:
+
+```python
+# Synthesis Plans
+path('synthesis-plans/',                              SynthesisPlanListCreateView.as_view()),
+path('synthesis-plans/<int:pk>/',                     SynthesisPlanDetailView.as_view()),
+path('synthesis-plans/<int:pk>/plan-experiments/',    SynthesisPlanExperimentsView.as_view()),
+
+# Investigation → Project link
+path('investigations/<int:pk>/link-project/',         InvestigationLinkProjectView.as_view()),
+```
+
+---
+
+### Frontend Changes
+
+#### `frontend/src/services/api.js`
+
+| Addition | Description |
+|---|---|
+| `synthesisPlan` service | `list(projectId)`, `create(data)`, `get(id)`, `update(id, data)`, `delete(id)`, `planExperiments(id)` |
+| `investigations.linkProject(id, projectId, linkShortlisted)` | Calls the new `link-project` endpoint |
+| `compounds.delete(id)` | `DELETE /api/compounds/{id}/` — was missing |
+
+#### `frontend/src/stores/analogs.js`
+
+`saveToProject` refactored to accept `{ projectId, projectName, compoundAction }`:
+- `projectId` — uses an existing project (null = create new)
+- `compoundAction` — `'replace'` deletes existing compounds before adding; `'add'` leaves them in place
+- After creating / selecting the project, calls `investigations.linkProject()` to wire the investigation and all shortlisted candidates
+
+#### `frontend/src/views/SynthesisPlanningPage.vue`
+
+| Change | Detail |
+|---|---|
+| Project picker | Shown at top when no `?project` query param; dropdown of all projects |
+| "Save Route to Project" button | Appears after retrosynthesis results load, if a project is linked. Calls `synthesisPlanApi.create()`. Disabled (with tooltip) if no project selected |
+| "Plan Experiments" button | Replaces the old direct experiment-creation flow. Only shown after a plan is saved (`savedPlan` ref is set). Calls `synthesisPlanApi.planExperiments(id)` |
+
+#### `frontend/src/views/AnalogWorkspacePage.vue`
+
+| Change | Detail |
+|---|---|
+| Project selector in Shortlist panel | Dropdown: existing projects + "Create new project" option |
+| New project name input | Shown only when "Create new project" is selected |
+| Compound conflict dialog | If the selected existing project already has compounds, a modal dialog asks "Replace existing" or "Add alongside" |
+| Save logic | On confirm, calls `store.saveToProject()` then navigates to `/synthesis?smiles=X&project=Y` |
+
+#### `frontend/src/views/ProjectSetupPage.vue`
+
+In edit mode, three new sections are rendered below the form:
+
+| Section | Shown when | Content |
+|---|---|---|
+| Reference Drug & Analogs | Project has a linked `DrugInvestigation` | Reference drug name, ChEMBL ID, SMILES; chip list of shortlisted analog candidates with similarity score and patent status badge |
+| Synthesis Plans | Always in edit mode | Table: target SMILES, plan type, status, step count, date. Actions: "Browse" (→ `/synthesis?smiles=X&project=Y`) and "Plan Experiments" (calls `planExperiments`, only shown when `experiment_count === 0`) |
+| Experiments | Always in edit mode | Table: title, type badge, status badge, date. "View" link to `/experiments/{id}` |
+
+Data is loaded in `loadEditData()` via parallel `synthesisPlanApi.list(id)` and `experimentsApi.list(id)` calls, invoked after the project is fetched.
+
+---
+
+### Updated Database Schema Summary
+
+The full `Project` detail response (`GET /api/projects/{id}/`) now includes:
+
+```json
+{
+  "synthesis_plans": [
+    { "id": 1, "target_smiles": "...", "plan_type": "retro", "status": "active", "created_at": "...", "experiment_count": 3 }
+  ],
+  "investigations": [
+    { "id": 1, "name": "Aspirin", "chembl_id": "CHEMBL25", "smiles": "...", "disease_name": "Pain" }
+  ],
+  "analog_candidates": [
+    { "id": 4, "smiles": "...", "pubchem_cid": 12345, "similarity_score": 0.82, "patent_status": "free", "shortlisted": true }
+  ]
+}
+```
+
+---
+
+## UPDATE 3 — Synthesis Planning Page Redesign
+
+### Overview of Changes
+
+| Area | Change |
+|---|---|
+| `SynthesisPlanningPage.vue` | Auto-run + auto-save; inline conditions; SynthesisTreeNode fix; padding |
+| `core/services/askcos.py` | `recommend_conditions` keyword matching |
+| `core/views/synthesis.py` | `ConditionRecommendView` reads `reaction_type` from body |
+
+---
+
+### Backend Changes
+
+#### `core/services/askcos.py` — `recommend_conditions`
+
+Added a `keywords` list to each entry in `conditions_db`. When `reaction_type` is provided, the function checks whether any keyword appears in `reaction_type.lower()` (or the reaction type string appears in `entry['reaction_type'].lower()`). If a match is found it returns only that one entry (instead of the first 5). This allows the frontend to pass a transform name such as `"Amide bond formation"` and receive the exact amide coupling conditions.
+
+```python
+conditions_db = [
+    {'reaction_type': 'Amide coupling', 'keywords': ['amide', 'amide bond', 'amide coupling'],
+     'reagents': 'HATU, DIPEA', 'solvent': 'DMF', 'temp': 'RT', 'time': '2–4 h'},
+    # … 11 more entries
+]
+if reaction_type:
+    rt_lower = reaction_type.lower()
+    for entry in conditions_db:
+        if any(kw in rt_lower for kw in entry['keywords']) or rt_lower in entry['reaction_type'].lower():
+            return {'reactants': reactants, 'products': products, 'conditions': [entry]}
+return {'reactants': reactants, 'products': products, 'conditions': conditions_db[:n]}
+```
+
+#### `core/views/synthesis.py` — `ConditionRecommendView`
+
+`reaction_type` is now read from `request.data` (POST body) and forwarded to `askcos.recommend_conditions()`. Previously it was ignored.
+
+---
+
+### Frontend Changes
+
+#### `frontend/src/views/SynthesisPlanningPage.vue`
+
+**SynthesisTreeNode — recursive component fix**
+
+The component was previously defined in a separate `<script>` Options API block and registered via `export default { components: { SynthesisTreeNode } }`. In Vue 3, a component defined this way cannot reference itself in its own `template` string because its `components` option was empty — breaking recursive tree rendering.
+
+Fix: the component is defined as a plain object inside `<script setup>` scope (making it accessible to the parent template automatically) and then patched to self-register:
+
+```js
+const SynthesisTreeNode = {
+  name: 'SynthesisTreeNode',
+  props: { node: Object, depth: { type: Number, default: 0 } },
+  template: `...`, // uses <SynthesisTreeNode> recursively
+}
+SynthesisTreeNode.components = { SynthesisTreeNode }  // enables recursion in runtime-compiled template
+```
+
+The separate `<script>` block was removed entirely.
+
+**Auto-run on mount**
+
+```js
+const fromAnalogWorkspace = computed(() => !!(route.query.smiles && route.query.project))
+
+onMounted(async () => {
+  if (route.query.smiles) smiles.value = route.query.smiles
+  if (route.query.project) linkedProjectId.value = Number(route.query.project)
+  // …
+  if (fromAnalogWorkspace.value) await runRetro('retro')
+})
+```
+
+**Auto-save on results load**
+
+`runRetro` no longer takes an `autoSave` parameter. Saving is unconditional whenever a project is linked and results are valid:
+
+```js
+const runRetro = async (action) => {
+  // …
+  if (action === 'retro') {
+    retroResult.value = await synthesisApi.retro({ smiles: smiles.value })
+    steps.forEach((step, i) => fetchStepConditions(step, i))
+    if (linkedProjectId.value && retroResult.value && !retroResult.value.error) {
+      await saveRoute('retro', retroResult.value)
+    }
+  } else {
+    treeResult.value = await synthesisApi.tree({ smiles: smiles.value })
+    if (linkedProjectId.value && treeResult.value && !treeResult.value.error) {
+      await saveRoute('tree', treeResult.value)
+    }
+  }
+}
+```
+
+"Save Route to Project" buttons removed from both retro and tree result sections.
+
+**Inline conditions**
+
+`fetchStepConditions(step, index)` is called for each step immediately after results load. It calls `POST /api/synthesis/conditions/` with `reaction_type: step.transform`. The result is stored in `stepConditions[index]` (null = loading, false = not found, object = conditions). Each step card renders a conditions box:
+
+```vue
+<div v-if="stepConditions[i] === null" class="text-muted text-sm">Fetching conditions…</div>
+<div v-else-if="stepConditions[i] === false" class="text-muted text-sm">Conditions not available…</div>
+<div v-else class="flex gap-4 text-sm">
+  <span><b>Reagents:</b> {{ stepConditions[i].reagents }}</span>
+  <span><b>Solvent:</b> {{ stepConditions[i].solvent }}</span>
+  <span><b>Temp:</b> {{ stepConditions[i].temp }}</span>
+  <span><b>Time:</b> {{ stepConditions[i].time }}</span>
+</div>
+```
+
+**Buyability check per precursor**
+
+Each precursor has a "Check availability" button that calls `GET /api/synthesis/buyables/?smiles=X`. Result stored in `stepBuyability['step-{i}-{j}']`. Button shows "✓ Available" (green) or "✗ Custom" (red) after the check.
+
+**Top padding**
+
+Outer `<div>` changed to `<div style="padding-top:16px">` to prevent the page header from sitting flush against the viewport top.
+
+**Forward Prediction**
+
+Moved into a collapsible `<div id="advanced-section">` at the bottom. The collapse toggle sets `showAdvanced` ref. The "Use in Forward Prediction" button on each step card scrolls to this section and populates `reactant1`/`reactant2` from the step's precursors.
+
+---
+
+## UPDATE 4 — Analog-Centric Synthesis Planning & Plan Comparison
+
+Implements the workflow redesign described in `product.md` UPDATE 4. Plans are now explicitly linked to analog candidates, plan creation flows through the Analogs table on the project page, and a comparison page lets scientists view multiple routes side by side.
+
+---
+
+### Database Changes
+
+#### `SynthesisPlan` — new field + constraint
+
+| Field | Type | Notes |
+|---|---|---|
+| `analog_candidate` | FK → `AnalogCandidate` | nullable, SET_NULL; links a plan to the specific analog it was designed for |
+
+**Unique constraint** (partial): `UniqueConstraint(fields=['analog_candidate', 'plan_type'], condition=Q(analog_candidate__isnull=False), name='unique_plan_type_per_analog')` — enforces at most one single-step and one multi-step plan per analog candidate.
+
+Migration: `core/migrations/0004_synthesisplan_analog_candidate.py`
+
+---
+
+### Backend Changes
+
+#### `core/serializers.py`
+
+| Change | Detail |
+|---|---|
+| `SynthesisPlanSerializer` | Added `analog_candidate` field (nullable, not required) |
+| `SynthesisPlanMinimalSerializer` | Added `analog_candidate` field |
+| `ProjectSerializer.get_analog_candidates` | Each candidate now includes `retro_plan_id` and `tree_plan_id` (the IDs of any single-step / multi-step plan linked to that candidate, or `null` if none exists) |
+
+`get_analog_candidates` implementation:
+```python
+def get_analog_candidates(self, obj):
+    result = []
+    for c in obj.analog_candidates.filter(shortlisted=True):
+        plans = {p.plan_type: p.id for p in c.synthesis_plans.all()}
+        result.append({
+            'id': c.id, 'smiles': c.smiles, 'pubchem_cid': c.pubchem_cid,
+            'similarity_score': c.similarity_score, 'patent_status': c.patent_status,
+            'shortlisted': c.shortlisted,
+            'retro_plan_id': plans.get('retro'),
+            'tree_plan_id': plans.get('tree'),
+        })
+    return result
+```
+
+#### `core/views/synthesis_plans.py`
+
+| Change | Detail |
+|---|---|
+| `get_queryset` | Accepts `?analog=ID` query param in addition to `?project=ID` |
+| `perform_create` | Returns HTTP 400 if a plan of the same `plan_type` already exists for the given `analog_candidate` (guards against race conditions beyond the DB constraint) |
+
+#### `core/views/analogs.py` + `core/urls.py`
+
+Added `AnalogCandidateDetailView` (`RetrieveUpdateAPIView`) at `PATCH /api/analog-candidates/{id}/` for immediate shortlist toggling in project mode.
+
+---
+
+### Frontend Changes
+
+#### `frontend/src/services/api.js`
+
+| Change | Detail |
+|---|---|
+| `synthesisPlan.list(params)` | Now accepts a plain object `{ project, analog }` or a legacy numeric project ID |
+| `analogCandidates.update(id, data)` | New — `PATCH /api/analog-candidates/{id}/` |
+
+#### `frontend/src/stores/analogs.js`
+
+| Change | Detail |
+|---|---|
+| `toggleShortlistPersisted(candidate, projectId)` | New — immediately PATCHes the candidate's `shortlisted` field; used in project mode |
+| `saveNewCandidatesToProject(projectId)` | New — bulk-creates candidates without a DB id, then calls `linkProject`; used by the "Done" button in project mode |
+| `saveToProject` | If `this.investigation` is null (drug-search mode coming straight from DrugProfilePage), creates a `DrugInvestigation` on the fly, persists all shortlisted candidates into it, then links it to the project. Redirects to the project page — not to Synthesis Planning |
+
+#### `frontend/src/views/AnalogWorkspacePage.vue`
+
+**Project mode** (entered via `?project=ID`):
+- On mount: fetches project detail → gets first investigation id → calls `store.loadInvestigation(invId)` to pre-populate candidates
+- Candidate toggle calls `store.toggleShortlistPersisted` (immediate PATCH) instead of the local-only `toggleShortlist`
+- Panel 3 shows a "Save & Return to Project" button instead of the project selector; button calls `store.saveNewCandidatesToProject(projectId)` then navigates to `/projects/{id}/edit`
+- A blue banner identifies project mode
+
+**Drug search mode** (no `?project`):
+- Unchanged UX; after `saveToProject`, redirects to `/projects/{id}/edit` (was `/synthesis?...` in UPDATE 3)
+
+#### `frontend/src/views/ProjectSetupPage.vue`
+
+| Change | Detail |
+|---|---|
+| Analog chip list → Analog table | Columns: SMILES, Similarity, Patent, Single-Step, Multi-Step. Plan status cells show "✓ Done" badge or "Plan →" button |
+| `planSynthesis(analogId, type)` | New — navigates to `/synthesis?project=ID&analog=ID&type=retro\|tree&autorun=1` |
+| "Start New Plan" removed | Replaced with "Find Analog" button → `/analogs?project=ID` |
+| `selectedPlanIds` ref | Array bound to plan row checkboxes via `v-model` |
+| Compare button | Shown (disabled until ≥2 selected) when the project has ≥2 synthesis plans; navigates to `/synthesis/compare?plans=1,2,...` |
+| `browseRoute(plan)` | Now passes `?plan=ID&type=TYPE&smiles=SMILES` so the exact plan is loaded |
+
+#### `frontend/src/views/SynthesisPlanningPage.vue`
+
+New URL parameters read on mount:
+
+| Param | Ref set | Effect |
+|---|---|---|
+| `?plan=ID` | `linkedPlanId` | `loadExistingPlan` fetches by ID; hydrates results; locks type |
+| `?analog=ID` | `linkedAnalogId` | `loadProjectDetail` resolves SMILES from `analog_candidates`; skips analog picker |
+| `?type=retro\|tree` | `lockedType` | Non-matching analysis type button is disabled |
+| `?autorun=1` | — | Stripped from URL immediately via `router.replace`; triggers auto-run + auto-save of `lockedType` |
+
+**`loadExistingPlan` — updated logic:**
+```js
+if (linkedPlanId.value) {
+  plan = await synthesisPlanApi.get(linkedPlanId.value)
+} else {
+  const params = { project: linkedProjectId.value }
+  if (linkedAnalogId.value) params.analog = linkedAnalogId.value
+  const plans = await synthesisPlanApi.list(params)
+  const filtered = lockedType.value ? plans.filter(p => p.plan_type === lockedType.value) : plans
+  plan = filtered[filtered.length - 1] || null
+}
+// Hydrate result refs and lock type
+if (plan?.route_data) {
+  plan.plan_type === 'retro'
+    ? (retroResult.value = plan.route_data)
+    : (treeResult.value = plan.route_data)
+  activeAnalysisType.value = plan.plan_type
+  lockedType.value = plan.plan_type
+  resultSynced.value = true
+}
+```
+
+**`smilesLocked` computed — simplified:**
+```js
+const smilesLocked = computed(() => !!(linkedProjectId.value && smiles.value))
+```
+Previously required `referenceInvestigation` — removed that dependency so the locked context panel renders even when the project has no investigation (e.g., when navigating via `?analog` without a full investigation chain).
+
+The reference drug sub-panel inside the locked context panel is wrapped in `v-if="referenceInvestigation"` so it only renders when investigation context is available.
+
+**`saveRoute`** — passes `analog_candidate` FK when `linkedAnalogId` is set:
+```js
+synthesisPlanApi.create({
+  project: linkedProjectId.value,
+  target_smiles: smiles.value,
+  plan_type: planType,
+  route_data: result,
+  ...(linkedAnalogId.value ? { analog_candidate: linkedAnalogId.value } : {}),
+})
+```
+
+#### `frontend/src/views/SynthesisPlanComparisonPage.vue` (new)
+
+Route: `/synthesis/compare?plans=1,2,...`
+
+- Reads `?plans` CSV on mount; fetches each plan in parallel via `synthesisPlanApi.get(id)`
+- Header row: one card per plan showing type badge, status, target SMILES, structure image (depict.chembl.io), step count, experiment count, creation date
+- Detail row: one column per plan showing full route — retro step cards (transform, precursors) or recursive synthesis tree via `SynthesisTreeNode`
+- Layout: CSS grid with `grid-template-columns: repeat(N, 1fr)` where N is the number of selected plans
+
+#### `frontend/src/router/index.js`
+
+Added route: `{ path: '/synthesis/compare', name: 'SynthesisPlanComparison', component: () => import('@/views/SynthesisPlanComparisonPage.vue') }`
+```

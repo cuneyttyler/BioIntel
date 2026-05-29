@@ -1,7 +1,7 @@
 import requests
 from .cache import make_cache_key, get_cached, set_cached
 
-BASE = 'https://dailymed.nlm.nih.gov/dailymed/services'
+BASE = 'https://dailymed.nlm.nih.gov/dailymed/services/v2'
 SOURCE = 'dailymed'
 
 

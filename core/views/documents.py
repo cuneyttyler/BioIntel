@@ -44,6 +44,13 @@ class GenerateDocumentView(APIView):
             'process_summary': 'a regulatory-ready process summary including rationale, key decision points, and recommended next milestones',
             'risk_report': 'a risk assessment report with risk factor analysis, mitigation strategies, and regulatory considerations',
             'handoff': 'a development handoff note summarizing process history, current status, and next-phase recommendations for manufacturing and regulatory teams',
+            'analog_report': (
+                'an analog development report covering: (1) reference drug profile and mechanism of action, '
+                '(2) patent landscape — which structural and process patents apply, '
+                '(3) selected analog rationale — why this structure avoids existing patents while preserving the therapeutic mechanism, '
+                '(4) ADMET comparison between the reference drug and the analog candidate, '
+                '(5) proposed synthesis route for the analog'
+            ),
         }
         doc_description = doc_type_prompts.get(doc_type, 'a process development document')
 

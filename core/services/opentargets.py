@@ -62,30 +62,25 @@ def get_disease_targets(efo_id: str, page: int = 0, size: int = 20) -> dict:
     return data.get('disease', {})
 
 
-def get_disease_drugs(efo_id: str, size: int = 20) -> dict:
+def get_disease_drugs(efo_id: str, size: int = 50) -> dict:
     query = '''
-    query DiseaseDrugs($efoId: String!, $size: Int!) {
+    query DiseaseDrugs($efoId: String!) {
       disease(efoId: $efoId) {
         id
         name
-        knownDrugs(size: $size) {
+        drugAndClinicalCandidates {
           count
           rows {
             drug {
               id
               name
-              maximumClinicalTrialPhase
+              maximumClinicalStage
             }
-            phase
-            status
-            disease {
-              id
-              name
-            }
+            maxClinicalStage
           }
         }
       }
     }
     '''
-    data = _query(query, {'efoId': efo_id, 'size': size})
+    data = _query(query, {'efoId': efo_id})
     return data.get('disease', {})

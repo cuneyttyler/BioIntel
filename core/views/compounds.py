@@ -30,7 +30,7 @@ class CompoundListCreateView(generics.ListCreateAPIView):
         return qs
 
 
-class CompoundDetailView(generics.RetrieveAPIView):
+class CompoundDetailView(generics.RetrieveDestroyAPIView):
     queryset = Compound.objects.all()
     serializer_class = CompoundSerializer
 
