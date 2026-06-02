@@ -36,13 +36,10 @@ export const diseases = {
   drugs: (efoId) => api.get(`/diseases/${efoId}/drugs/`),
 }
 
-export const targets = {
-  detail: (uniprotId) => api.get(`/targets/${uniprotId}/`),
-}
-
 export const experiments = {
   recent: () => api.get('/experiments/recent/'),
-  list: (projectId) => api.get('/experiments/', { params: { project_id: projectId } }),
+  list: (projectId, params = {}) => api.get('/experiments/', { params: { project_id: projectId, ...params } }),
+  listByPlan: (planId) => api.get('/experiments/', { params: { synthesis_plan: planId } }),
   create: (data) => api.post('/experiments/', data),
   get: (id) => api.get(`/experiments/${id}/`),
   update: (id, data) => api.put(`/experiments/${id}/`, data),
@@ -109,6 +106,7 @@ export const analogs = {
   search: (smiles, threshold) => api.post('/analogs/search/', { smiles, threshold }),
   patentCheck: (candidates) => api.post('/analogs/patent-check/', { candidates }),
   admet: (smiles_list) => api.post('/analogs/admet/', { smiles_list }),
+  update: (id, data) => api.patch(`/analog-candidates/${id}/`, data),
 }
 
 export const investigations = {
@@ -133,6 +131,138 @@ export const synthesisPlan = {
 
 export const analogCandidates = {
   update: (id, data) => api.patch(`/analog-candidates/${id}/`, data),
+}
+
+// ─── v2 API modules ──────────────────────────────────────────────────────────
+
+export const projectPhases = {
+  list: (projectId) => api.get(`/projects/${projectId}/phases/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/phases/`, data),
+  get: (projectId, phaseId) => api.get(`/projects/${projectId}/phases/${phaseId}/`),
+  update: (projectId, phaseId, data) => api.patch(`/projects/${projectId}/phases/${phaseId}/`, data),
+  decision: (projectId, phaseId, data) => api.post(`/projects/${projectId}/phases/${phaseId}/decision/`, data),
+}
+
+export const targets = {
+  // v1 compatibility
+  detail: (uniprotId) => api.get(`/targets/${uniprotId}/`),
+  // v2 target profiles
+  listProfiles: () => api.get('/target-profiles/'),
+  createProfile: (data) => api.post('/target-profiles/', data),
+  getProfile: (id) => api.get(`/target-profiles/${id}/`),
+  updateProfile: (id, data) => api.patch(`/target-profiles/${id}/`, data),
+  pdb: (id) => api.get(`/target-profiles/${id}/pdb/`),
+  bindingSites: (id, pdbId) => api.get(`/target-profiles/${id}/binding-sites/`, { params: pdbId ? { pdb_id: pdbId } : {} }),
+  saveBindingSite: (id, data) => api.post(`/target-profiles/${id}/binding-sites/`, data),
+  uniprot: (id) => api.get(`/target-profiles/${id}/uniprot/`),
+}
+
+export const virtualScreening = {
+  createRun: (data) => api.post('/virtual-screening/runs/', data),
+  getRun: (id) => api.get(`/virtual-screening/runs/${id}/`),
+  poll: (id) => api.get(`/virtual-screening/runs/${id}/poll/`),
+  hits: (runId, shortlisted = false) => api.get(`/virtual-screening/runs/${runId}/hits/`, { params: shortlisted ? { shortlisted: 'true' } : {} }),
+  shortlistHit: (hitId, data) => api.patch(`/virtual-screening/hits/${hitId}/shortlist/`, data),
+}
+
+export const sar = {
+  list: (projectId) => api.get(`/projects/${projectId}/sar/`),
+  create: (data) => api.post(`/projects/${data.project}/sar/`, data),
+  get: (id) => api.get(`/sar-entries/${id}/`),
+  update: (id, data) => api.patch(`/sar-entries/${id}/`, data),
+  delete: (id) => api.delete(`/sar-entries/${id}/`),
+  heatmap: (projectId) => api.get(`/projects/${projectId}/sar/heatmap/`),
+}
+
+export const formulation = {
+  getByProject: (projectId) => api.get(`/projects/${projectId}/formulation/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/formulation/`, data),
+  get: (id) => api.get(`/formulation-plans/${id}/`),
+  update: (id, data) => api.patch(`/formulation-plans/${id}/`, data),
+  addComponent: (planId, data) => api.post(`/formulation-plans/${planId}/components/`, data),
+  removeComponent: (planId, componentId) => api.delete(`/formulation-plans/${planId}/components/${componentId}/`),
+  checkCompatibility: (planId) => api.post(`/formulation-plans/${planId}/compatibility/`),
+  context: (planId) => api.get(`/formulation-plans/${planId}/context/`),
+}
+
+export const excipients = {
+  search: (params) => api.get('/excipients/search/', { params }),
+}
+
+export const saltScreening = {
+  list: (projectId) => api.get(`/projects/${projectId}/salt-screens/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/salt-screens/`, data),
+  get: (id) => api.get(`/salt-screens/${id}/`),
+  update: (id, data) => api.patch(`/salt-screens/${id}/`, data),
+  delete: (id) => api.delete(`/salt-screens/${id}/`),
+  candidates: (screenId) => api.get(`/salt-screens/${screenId}/candidates/`),
+  addCandidate: (screenId, data) => api.post(`/salt-screens/${screenId}/candidates/`, data),
+  updateCandidate: (id, data) => api.patch(`/salt-screen-candidates/${id}/`, data),
+  deleteCandidate: (id) => api.delete(`/salt-screen-candidates/${id}/`),
+  experiments: (screenId) => api.get(`/salt-screens/${screenId}/experiments/`),
+  addExperiment: (screenId, data) => api.post(`/salt-screens/${screenId}/experiments/`, data),
+  updateExperiment: (id, data) => api.patch(`/salt-screen-experiments/${id}/`, data),
+  deleteExperiment: (id) => api.delete(`/salt-screen-experiments/${id}/`),
+  ccdc: (params) => api.get('/ccdc/lookup/', { params }),
+}
+
+export const stability = {
+  getByProject: (projectId) => api.get(`/projects/${projectId}/stability/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/stability/`, data),
+  get: (id) => api.get(`/stability-plans/${id}/`),
+  update: (id, data) => api.patch(`/stability-plans/${id}/`, data),
+  addCondition: (planId, data) => api.post(`/stability-plans/${planId}/conditions/`, data),
+  results: (planId, params) => api.get(`/stability-plans/${planId}/results/`, { params }),
+  logResult: (planId, data) => api.post(`/stability-plans/${planId}/results/`, data),
+  matrix: (planId) => api.get(`/stability-plans/${planId}/matrix/`),
+  context: (planId) => api.get(`/stability-plans/${planId}/context/`),
+}
+
+export const analytical = {
+  list: (projectId) => api.get(`/projects/${projectId}/analytical-methods/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/analytical-methods/`, data),
+  get: (id) => api.get(`/analytical-methods/${id}/`),
+  update: (id, data) => api.patch(`/analytical-methods/${id}/`, data),
+  delete: (id) => api.delete(`/analytical-methods/${id}/`),
+  validation: (id) => api.get(`/analytical-methods/${id}/validation/`),
+}
+
+export const specifications = {
+  list: (projectId) => api.get(`/projects/${projectId}/specifications/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/specifications/`, data),
+  get: (id) => api.get(`/specifications/${id}/`),
+  update: (id, data) => api.patch(`/specifications/${id}/`, data),
+  delete: (id) => api.delete(`/specifications/${id}/`),
+}
+
+export const preclinical = {
+  list: (projectId) => api.get(`/projects/${projectId}/preclinical/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/preclinical/`, data),
+  get: (id) => api.get(`/preclinical-studies/${id}/`),
+  update: (id, data) => api.patch(`/preclinical-studies/${id}/`, data),
+  delete: (id) => api.delete(`/preclinical-studies/${id}/`),
+  logResults: (id, data) => api.patch(`/preclinical-studies/${id}/results/`, data),
+  admetDashboard: (projectId) => api.get(`/projects/${projectId}/admet-dashboard/`),
+  context: (id) => api.get(`/preclinical-studies/${id}/context/`),
+}
+
+export const context = {
+  project: (id) => api.get(`/projects/${id}/context/`),
+  compound: (id) => api.get(`/compounds/${id}/context/`),
+  synthesisPlan: (id) => api.get(`/synthesis-plans/${id}/context/`),
+  formulationPlan: (id) => api.get(`/formulation-plans/${id}/context/`),
+  stabilityPlan: (id) => api.get(`/stability-plans/${id}/context/`),
+  preclinicalStudy: (id) => api.get(`/preclinical-studies/${id}/context/`),
+}
+
+// Unified namespace for stores — avoids importing every named export individually
+export const apiClient = {
+  projects, compounds, diseases, targets, experiments, risk, synthesis,
+  literature, regulatory, chat, documents, drugs, patents, analogs,
+  investigations, synthesisPlan, analogCandidates,
+  // v2
+  projectPhases, virtualScreening, sar, formulation, excipients,
+  saltScreening, stability, analytical, specifications, preclinical, context,
 }
 
 export async function* createSSEStream(url, options = {}) {

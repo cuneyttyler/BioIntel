@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { synthesis as synthesisApi, synthesisPlan as synthesisPlanApi, projects as projectsApi } from '@/services/api'
+import { synthesis as synthesisApi, synthesisPlan as synthesisPlanApi, projects as projectsApi, experiments as experimentsApi } from '@/services/api'
 import { useUIStore } from '@/stores/ui'
 import PageHeader from '@/components/layout/PageHeader.vue'
 
@@ -36,6 +36,23 @@ const reactant1 = ref('')
 const reactant2 = ref('')
 const forwardResult = ref(null)
 const loadingForward = ref(false)
+
+// Experiments linked to the saved plan
+const planExperimentsList = ref([])
+
+const loadPlanExperiments = async () => {
+  if (!savedPlan.value) return
+  try {
+    planExperimentsList.value = await experimentsApi.listByPlan(savedPlan.value.id)
+  } catch { planExperimentsList.value = [] }
+}
+
+const statusBadgeClass = (s) => ({
+  planned: 'badge-active', in_progress: 'badge-active',
+  completed: 'badge-completed', failed: 'badge-failed',
+}[s] || '')
+
+const formatDate = (dt) => dt ? new Date(dt).toLocaleDateString() : '—'
 
 // Delete confirmation
 const showDeleteConfirm = ref(false)
@@ -144,6 +161,7 @@ const loadExistingPlan = async () => {
     }
     if (!plan) return
     savedPlan.value = plan
+    await loadPlanExperiments()
     // Lock the type to whatever this plan is
     if (!lockedType.value) lockedType.value = plan.plan_type
     // Hydrate the result panel from saved route_data so the route is visible immediately
@@ -240,6 +258,7 @@ const saveRoute = async (planType) => {
       ...(linkedAnalogId.value ? { analog_candidate: linkedAnalogId.value } : {}),
     })
     resultSynced.value = true
+    await loadPlanExperiments()
     ui.addToast('Synthesis plan saved.', 'success')
   } catch (e) {
     console.error(e)
@@ -275,8 +294,8 @@ const planExperiments = async () => {
   loading.value.planExperiments = true
   try {
     const exps = await synthesisPlanApi.planExperiments(savedPlan.value.id)
+    await loadPlanExperiments()
     ui.addToast(`${exps.length} experiment${exps.length !== 1 ? 's' : ''} created.`, 'success')
-    router.push(`/projects/${linkedProjectId.value}/edit`)
   } catch {
     ui.addToast('Failed to create experiments.', 'error')
   } finally {
@@ -625,6 +644,43 @@ const useAsReactant = (smilesVal) => {
           >🗑 Delete Plan</button>
         </div>
       </div>
+    </div>
+
+    <!-- ── Experiments for this plan ── -->
+    <div v-if="savedPlan" class="card mb-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="card-title" style="margin-bottom:0">Synthesis Experiments</div>
+        <RouterLink
+          :to="`/experiments/new?project=${linkedProjectId}&plan=${savedPlan.id}&type=synthesis`"
+          class="btn btn-secondary btn-sm"
+        >+ Log Experiment</RouterLink>
+      </div>
+
+      <div v-if="!planExperimentsList.length" class="text-muted text-sm">
+        No experiments yet. Click <strong>Plan Experiments</strong> above to auto-create experiments from each synthesis step, or add one manually.
+      </div>
+      <table v-else style="width:100%;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:6px 8px;font-weight:600">Title</th>
+            <th style="text-align:left;padding:6px 8px;font-weight:600">Type</th>
+            <th style="text-align:left;padding:6px 8px;font-weight:600">Status</th>
+            <th style="text-align:left;padding:6px 8px;font-weight:600">Created</th>
+            <th style="padding:6px 8px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="exp in planExperimentsList" :key="exp.id" style="border-bottom:1px solid var(--border)">
+            <td style="padding:6px 8px">{{ exp.title }}</td>
+            <td style="padding:6px 8px"><span class="badge">{{ exp.experiment_type }}</span></td>
+            <td style="padding:6px 8px"><span class="badge" :class="statusBadgeClass(exp.status)">{{ exp.status }}</span></td>
+            <td style="padding:6px 8px;color:var(--text-muted)">{{ formatDate(exp.created_at) }}</td>
+            <td style="padding:6px 8px;text-align:right">
+              <RouterLink :to="`/experiments/${exp.id}`" class="btn btn-secondary btn-sm">View →</RouterLink>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Delete confirmation modal -->

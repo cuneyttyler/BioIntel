@@ -22,6 +22,26 @@ from core.views import (
     InvestigationListCreateView, InvestigationDetailView, InvestigationLinkProjectView,
     AnalogCandidateView, AnalogCandidateDetailView,
     SynthesisPlanListCreateView, SynthesisPlanDetailView, SynthesisPlanExperimentsView,
+    # v2
+    ProjectPhaseListView, ProjectPhaseDetailView, ProjectPhaseDecisionView,
+    TargetProfileListCreateView, TargetProfileDetailView, TargetPDBView,
+    TargetBindingSitesView, TargetUniProtView,
+    VirtualScreeningRunListCreateView, VirtualScreeningRunDetailView,
+    VirtualScreeningRunPollView, VirtualScreeningHitListView, VirtualScreeningHitShortlistView,
+    SAREntryListCreateView, SAREntryDetailView, ProjectSARHeatmapView,
+    FormulationPlanListCreateView, FormulationPlanDetailView, FormulationComponentView,
+    CompatibilityCheckView, FormulationContextView, ExcipientSearchView,
+    SaltScreenListCreateView, SaltScreenDetailView, SaltScreenCandidateView,
+    SaltScreenCandidateDetailView, SaltScreenExperimentView, SaltScreenExperimentDetailView,
+    CCDCLookupView,
+    StabilityPlanListCreateView, StabilityPlanDetailView, StabilityConditionView,
+    StabilityResultView, StabilityMatrixView, StabilityContextView,
+    AnalyticalMethodListCreateView, AnalyticalMethodDetailView,
+    AnalyticalMethodValidationView, SpecificationListCreateView, SpecificationDetailView,
+    PreclinicalStudyListCreateView, PreclinicalStudyDetailView,
+    PreclinicalStudyResultsView, ADMETDashboardView, PreclinicalContextView,
+    ProjectContextView, CompoundContextView, SynthesisPlanContextView,
+    FormulationPlanContextView, StabilityPlanContextView, PreclinicalStudyContextView,
 )
 
 urlpatterns = [
@@ -32,6 +52,12 @@ urlpatterns = [
     path('projects/<int:pk>/risk-assessment/generate/', GenerateRiskAssessmentView.as_view()),
     path('projects/<int:pk>/documents/', ProjectDocumentListCreateView.as_view()),
     path('projects/<int:pk>/documents/generate/', GenerateDocumentView.as_view()),
+    path('projects/<int:pk>/context/', ProjectContextView.as_view()),
+
+    # Project Phases (v2)
+    path('projects/<int:pk>/phases/', ProjectPhaseListView.as_view()),
+    path('projects/<int:pk>/phases/<int:phase_pk>/', ProjectPhaseDetailView.as_view()),
+    path('projects/<int:pk>/phases/<int:phase_pk>/decision/', ProjectPhaseDecisionView.as_view()),
 
     # Compounds
     path('compounds/search/', CompoundSearchView.as_view()),
@@ -44,12 +70,20 @@ urlpatterns = [
     path('compounds/<int:pk>/targets/', CompoundTargetsView.as_view()),
     path('compounds/<int:pk>/structure/', CompoundStructureView.as_view()),
     path('compounds/<int:pk>/similar/', CompoundSimilarView.as_view()),
+    path('compounds/<int:pk>/context/', CompoundContextView.as_view()),
 
     # Diseases & Targets
     path('diseases/search/', DiseaseSearchView.as_view()),
     path('diseases/<str:efo_id>/targets/', DiseaseTargetsView.as_view()),
     path('diseases/<str:efo_id>/drugs/', DiseaseDrugsView.as_view()),
     path('targets/<str:gene_symbol>/', TargetDetailView.as_view()),
+
+    # Target Profiles (v2)
+    path('target-profiles/', TargetProfileListCreateView.as_view()),
+    path('target-profiles/<int:pk>/', TargetProfileDetailView.as_view()),
+    path('target-profiles/<int:pk>/pdb/', TargetPDBView.as_view()),
+    path('target-profiles/<int:pk>/binding-sites/', TargetBindingSitesView.as_view()),
+    path('target-profiles/<int:pk>/uniprot/', TargetUniProtView.as_view()),
 
     # Experiments
     path('experiments/recent/', RecentExperimentsView.as_view()),
@@ -64,6 +98,12 @@ urlpatterns = [
     path('synthesis/forward/', ForwardPredictionView.as_view()),
     path('synthesis/conditions/', ConditionRecommendView.as_view()),
     path('synthesis/buyables/', BuyableCheckView.as_view()),
+
+    # Synthesis Plans
+    path('synthesis-plans/', SynthesisPlanListCreateView.as_view()),
+    path('synthesis-plans/<int:pk>/', SynthesisPlanDetailView.as_view()),
+    path('synthesis-plans/<int:pk>/plan-experiments/', SynthesisPlanExperimentsView.as_view()),
+    path('synthesis-plans/<int:pk>/context/', SynthesisPlanContextView.as_view()),
 
     # Literature & Clinical Trials
     path('literature/search/', LiteratureSearchView.as_view()),
@@ -107,8 +147,55 @@ urlpatterns = [
     path('investigations/<int:pk>/candidates/', AnalogCandidateView.as_view()),
     path('analog-candidates/<int:pk>/', AnalogCandidateDetailView.as_view()),
 
-    # Synthesis Plans
-    path('synthesis-plans/', SynthesisPlanListCreateView.as_view()),
-    path('synthesis-plans/<int:pk>/', SynthesisPlanDetailView.as_view()),
-    path('synthesis-plans/<int:pk>/plan-experiments/', SynthesisPlanExperimentsView.as_view()),
+    # Virtual Screening (v2)
+    path('virtual-screening/runs/', VirtualScreeningRunListCreateView.as_view()),
+    path('virtual-screening/runs/<int:pk>/', VirtualScreeningRunDetailView.as_view()),
+    path('virtual-screening/runs/<int:pk>/poll/', VirtualScreeningRunPollView.as_view()),
+    path('virtual-screening/runs/<int:pk>/hits/', VirtualScreeningHitListView.as_view()),
+    path('virtual-screening/hits/<int:pk>/shortlist/', VirtualScreeningHitShortlistView.as_view()),
+
+    # SAR Tracker (v2)
+    path('projects/<int:pk>/sar/', SAREntryListCreateView.as_view()),
+    path('projects/<int:pk>/sar/heatmap/', ProjectSARHeatmapView.as_view()),
+    path('sar-entries/<int:pk>/', SAREntryDetailView.as_view()),
+
+    # Formulation (v2)
+    path('projects/<int:pk>/formulation/', FormulationPlanListCreateView.as_view()),
+    path('formulation-plans/<int:pk>/', FormulationPlanDetailView.as_view()),
+    path('formulation-plans/<int:pk>/components/', FormulationComponentView.as_view()),
+    path('formulation-plans/<int:pk>/components/<int:component_pk>/', FormulationComponentView.as_view()),
+    path('formulation-plans/<int:pk>/compatibility/', CompatibilityCheckView.as_view()),
+    path('formulation-plans/<int:pk>/context/', FormulationPlanContextView.as_view()),
+    path('excipients/search/', ExcipientSearchView.as_view()),
+
+    # Salt/Polymorph Screening (v2)
+    path('projects/<int:pk>/salt-screens/', SaltScreenListCreateView.as_view()),
+    path('salt-screens/<int:pk>/', SaltScreenDetailView.as_view()),
+    path('salt-screens/<int:pk>/candidates/', SaltScreenCandidateView.as_view()),
+    path('salt-screen-candidates/<int:pk>/', SaltScreenCandidateDetailView.as_view()),
+    path('salt-screens/<int:pk>/experiments/', SaltScreenExperimentView.as_view()),
+    path('salt-screen-experiments/<int:pk>/', SaltScreenExperimentDetailView.as_view()),
+    path('ccdc/lookup/', CCDCLookupView.as_view()),
+
+    # Stability (v2)
+    path('projects/<int:pk>/stability/', StabilityPlanListCreateView.as_view()),
+    path('stability-plans/<int:pk>/', StabilityPlanDetailView.as_view()),
+    path('stability-plans/<int:pk>/conditions/', StabilityConditionView.as_view()),
+    path('stability-plans/<int:pk>/results/', StabilityResultView.as_view()),
+    path('stability-plans/<int:pk>/matrix/', StabilityMatrixView.as_view()),
+    path('stability-plans/<int:pk>/context/', StabilityPlanContextView.as_view()),
+
+    # Analytical Methods & Specifications (v2)
+    path('projects/<int:pk>/analytical-methods/', AnalyticalMethodListCreateView.as_view()),
+    path('analytical-methods/<int:pk>/', AnalyticalMethodDetailView.as_view()),
+    path('analytical-methods/<int:pk>/validation/', AnalyticalMethodValidationView.as_view()),
+    path('projects/<int:pk>/specifications/', SpecificationListCreateView.as_view()),
+    path('specifications/<int:pk>/', SpecificationDetailView.as_view()),
+
+    # Preclinical Studies & ADMET Dashboard (v2)
+    path('projects/<int:pk>/preclinical/', PreclinicalStudyListCreateView.as_view()),
+    path('preclinical-studies/<int:pk>/', PreclinicalStudyDetailView.as_view()),
+    path('preclinical-studies/<int:pk>/results/', PreclinicalStudyResultsView.as_view()),
+    path('preclinical-studies/<int:pk>/context/', PreclinicalStudyContextView.as_view()),
+    path('projects/<int:pk>/admet-dashboard/', ADMETDashboardView.as_view()),
 ]

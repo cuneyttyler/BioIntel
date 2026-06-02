@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useProjectStore } from '@/stores/projects'
 import { useExperimentStore } from '@/stores/experiments'
 import { synthesis as synthesisApi } from '@/services/api'
@@ -9,11 +9,26 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 const router = useRouter()
+const route = useRoute()
 const projectStore = useProjectStore()
 const expStore = useExperimentStore()
 const ui = useUIStore()
 
-onMounted(() => projectStore.fetchProjects())
+const linkedPlanId = ref(null)
+const planLocked = ref(false)
+
+onMounted(() => {
+  projectStore.fetchProjects()
+  if (route.query.project) {
+    form.value.project = Number(route.query.project)
+    planLocked.value = true
+  }
+  if (route.query.plan) {
+    linkedPlanId.value = Number(route.query.plan)
+    planLocked.value = true
+  }
+  if (route.query.type) form.value.experiment_type = route.query.type
+})
 
 const form = ref({
   title: '',
@@ -59,10 +74,15 @@ const submit = async () => {
       ...form.value,
       project: Number(form.value.project),
       compound: form.value.compound ? Number(form.value.compound) : null,
+      ...(linkedPlanId.value ? { synthesis_plan: linkedPlanId.value } : {}),
     }
     const exp = await expStore.createExperiment(payload)
     ui.addToast('Experiment created', 'success')
-    router.push(`/experiments/${exp.id}`)
+    if (linkedPlanId.value && form.value.project) {
+      router.push(`/synthesis?project=${form.value.project}&plan=${linkedPlanId.value}`)
+    } else {
+      router.push(`/experiments/${exp.id}`)
+    }
   } catch {
     ui.addToast('Failed to create experiment', 'error')
   } finally {
@@ -76,7 +96,13 @@ const submit = async () => {
     <PageHeader title="New Experiment">
       <template #actions>
         <RouterLink
-          v-if="form.project"
+          v-if="linkedPlanId && form.project"
+          :to="`/synthesis?project=${form.project}&plan=${linkedPlanId}`"
+          class="btn btn-secondary btn-sm"
+          style="display:inline-flex;align-items:center;gap:6px"
+        >← Back to Synthesis Plan</RouterLink>
+        <RouterLink
+          v-else-if="form.project"
           :to="`/projects/${form.project}/edit`"
           class="btn btn-secondary btn-sm"
           style="display:inline-flex;align-items:center;gap:6px"
@@ -95,7 +121,7 @@ const submit = async () => {
         </div>
         <div class="form-group">
           <label class="form-label">Type *</label>
-          <select v-model="form.experiment_type" class="form-control">
+          <select v-model="form.experiment_type" class="form-control" :disabled="planLocked">
             <option value="formulation">Formulation</option>
             <option value="synthesis">Synthesis</option>
             <option value="analytical">Analytical</option>
@@ -107,10 +133,13 @@ const submit = async () => {
       <div class="grid-2">
         <div class="form-group">
           <label class="form-label">Project *</label>
-          <select v-model="form.project" class="form-control" required>
+          <select v-model="form.project" class="form-control" required :disabled="planLocked">
             <option value="">Select project...</option>
             <option v-for="p in projectStore.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
+          <p v-if="planLocked && linkedPlanId" class="text-muted text-sm" style="margin:4px 0 0;font-size:11px">
+            Linked to synthesis plan #{{ linkedPlanId }}
+          </p>
         </div>
         <div class="form-group">
           <label class="form-label">Status</label>

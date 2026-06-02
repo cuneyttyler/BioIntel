@@ -35,3 +35,35 @@ from .analogs import (
 from .synthesis_plans import (
     SynthesisPlanListCreateView, SynthesisPlanDetailView, SynthesisPlanExperimentsView,
 )
+from .project_phases import ProjectPhaseListView, ProjectPhaseDetailView, ProjectPhaseDecisionView
+from .targets import TargetProfileListCreateView, TargetProfileDetailView, TargetPDBView, TargetBindingSitesView, TargetUniProtView
+from .virtual_screening import (
+    VirtualScreeningRunListCreateView, VirtualScreeningRunDetailView,
+    VirtualScreeningRunPollView, VirtualScreeningHitListView, VirtualScreeningHitShortlistView,
+)
+from .sar import SAREntryListCreateView, SAREntryDetailView, ProjectSARHeatmapView
+from .formulation import (
+    FormulationPlanListCreateView, FormulationPlanDetailView, FormulationComponentView,
+    CompatibilityCheckView, FormulationContextView, ExcipientSearchView,
+)
+from .salt_screening import (
+    SaltScreenListCreateView, SaltScreenDetailView, SaltScreenCandidateView,
+    SaltScreenCandidateDetailView, SaltScreenExperimentView, SaltScreenExperimentDetailView,
+    CCDCLookupView,
+)
+from .stability import (
+    StabilityPlanListCreateView, StabilityPlanDetailView, StabilityConditionView,
+    StabilityResultView, StabilityMatrixView, StabilityContextView,
+)
+from .analytical import (
+    AnalyticalMethodListCreateView, AnalyticalMethodDetailView,
+    AnalyticalMethodValidationView, SpecificationListCreateView, SpecificationDetailView,
+)
+from .preclinical import (
+    PreclinicalStudyListCreateView, PreclinicalStudyDetailView,
+    PreclinicalStudyResultsView, ADMETDashboardView, PreclinicalContextView,
+)
+from .context import (
+    ProjectContextView, CompoundContextView, SynthesisPlanContextView,
+    FormulationPlanContextView, StabilityPlanContextView, PreclinicalStudyContextView,
+)

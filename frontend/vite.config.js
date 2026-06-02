@@ -8,6 +8,22 @@ export default defineConfig({
     alias: { '@': resolve(__dirname, 'src') },
   },
   server: {
+    allowedHosts: ['biointel.loca.lt'],
+    hmr: {
+      host: 'biointel.loca.lt',
+      protocol: 'wss',
+      clientPort: 443,
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    port: 4173,
+    allowedHosts: ['biointel.loca.lt'],
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

@@ -3,7 +3,7 @@ import anthropic
 from django.conf import settings
 
 from . import pubchem, chembl, opentargets, uniprot, pkcsm, comptox
-from . import openfda, dailymed, clinicaltrials, pubmed, askcos, nist, surechembl
+from . import openfda, dailymed, clinicaltrials, pubmed, askcos, nist, surechembl, pdb
 
 MODEL = 'claude-sonnet-4-6'
 
@@ -181,6 +181,35 @@ TOOL_DEFINITIONS = [
             'required': ['chembl_id'],
         },
     },
+    {
+        'name': 'get_pdb_structure',
+        'description': 'Retrieve protein structure data from RCSB PDB by PDB ID. Returns resolution, experimental method, organism, and bound ligands.',
+        'input_schema': {
+            'type': 'object',
+            'properties': {'pdb_id': {'type': 'string', 'description': 'PDB ID (4-character code, e.g. "3ERT")'}},
+            'required': ['pdb_id'],
+        },
+    },
+    {
+        'name': 'get_excipient_info',
+        'description': 'Look up pharmaceutical excipient data including FDA IIG limits, incompatibilities, and GRAS status.',
+        'input_schema': {
+            'type': 'object',
+            'properties': {'excipient_name': {'type': 'string', 'description': 'Excipient name (e.g. "microcrystalline cellulose", "povidone")'}},
+            'required': ['excipient_name'],
+        },
+    },
+    {
+        'name': 'get_stability_guidelines',
+        'description': 'Retrieve ICH Q1A(R2) stability testing conditions and acceptance criteria for a material type.',
+        'input_schema': {
+            'type': 'object',
+            'properties': {
+                'material_type': {'type': 'string', 'enum': ['api', 'dp', 'intermediate'], 'description': 'Material type: api (drug substance), dp (drug product), or intermediate'},
+            },
+            'required': ['material_type'],
+        },
+    },
 ]
 
 
@@ -239,6 +268,37 @@ def _dispatch_tool(name: str, inputs: dict) -> dict:
             mol = chembl.get_molecule(inputs['chembl_id'])
             mech = chembl.get_mechanisms(inputs['chembl_id'])
             return {'molecule': mol, 'mechanisms': mech}
+        elif name == 'get_pdb_structure':
+            return pdb.get_structure(inputs['pdb_id'])
+        elif name == 'get_excipient_info':
+            from core.models import Excipient
+            try:
+                exc = Excipient.objects.get(name__iexact=inputs['excipient_name'])
+                return {
+                    'name': exc.name, 'iig_limit': exc.iig_limit, 'iig_unit': exc.iig_unit,
+                    'function': exc.function, 'route': exc.route, 'gras_status': exc.gras_status,
+                    'incompatibilities': exc.incompatibilities,
+                }
+            except Excipient.DoesNotExist:
+                return {'error': f'Excipient not found: {inputs["excipient_name"]}'}
+        elif name == 'get_stability_guidelines':
+            guidelines = {
+                'api': {
+                    'long_term': {'condition': '25°C/60% RH', 'duration': '12 months minimum', 'reference': 'ICH Q1A(R2)'},
+                    'accelerated': {'condition': '40°C/75% RH', 'duration': '6 months', 'reference': 'ICH Q1A(R2)'},
+                    'attributes': ['appearance', 'assay', 'related substances', 'water content', 'microbial limits'],
+                },
+                'dp': {
+                    'long_term': {'condition': '25°C/60% RH or 30°C/65% RH', 'duration': '12 months minimum', 'reference': 'ICH Q1A(R2)'},
+                    'accelerated': {'condition': '40°C/75% RH', 'duration': '6 months', 'reference': 'ICH Q1A(R2)'},
+                    'attributes': ['appearance', 'assay', 'degradation products', 'dissolution', 'hardness', 'water activity'],
+                },
+                'intermediate': {
+                    'long_term': {'condition': '25°C/60% RH', 'duration': 'processing time + margin', 'reference': 'ICH Q1A(R2)'},
+                    'attributes': ['appearance', 'assay', 'microbial limits'],
+                },
+            }
+            return guidelines.get(inputs['material_type'], {'error': 'Unknown material type'})
         else:
             return {'error': f'Unknown tool: {name}'}
     except Exception as e:

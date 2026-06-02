@@ -51,6 +51,52 @@ class GenerateDocumentView(APIView):
                 '(4) ADMET comparison between the reference drug and the analog candidate, '
                 '(5) proposed synthesis route for the analog'
             ),
+            'formulation_report': (
+                'a pharmaceutical formulation development report following ICH Q8(R2) principles covering: '
+                '(1) dosage form and route of administration rationale, '
+                '(2) composition table with IIG compliance for each excipient, '
+                '(3) API-excipient compatibility assessment, '
+                '(4) manufacturing process description and critical process parameters, '
+                '(5) container closure system justification, '
+                '(6) recommended next development steps'
+            ),
+            'stability_summary': (
+                'a stability summary report per ICH Q1A(R2) covering: '
+                '(1) material description and intended storage condition, '
+                '(2) stability study design (conditions, timepoints, attributes tested), '
+                '(3) results summary with assay trends and degradation product profiles, '
+                '(4) any OOS or OOT results with investigation summary, '
+                '(5) proposed shelf life and label storage condition, '
+                '(6) conclusions and recommendations'
+            ),
+            'admet_summary': (
+                'an ADMET/pharmacokinetics summary report covering: '
+                '(1) in-silico ADMET predictions (pkCSM) with flag thresholds, '
+                '(2) experimental measurements if available, '
+                '(3) comparison against benchmark criteria (lead drug or literature), '
+                '(4) key liabilities identified (hERG, P-gp efflux, CYP inhibition, hepatotoxicity), '
+                '(5) preclinical PK parameters if available, '
+                '(6) overall druggability assessment and recommended mitigation strategies'
+            ),
+            'ind_cmc': (
+                'an IND CMC (Chemistry, Manufacturing, and Controls) section per 21 CFR 312.23(a)(7) covering: '
+                '## 3.2.S — Drug Substance\n'
+                '- Nomenclature, structure, general properties\n'
+                '- Manufacturing process and process controls\n'
+                '- Characterization (structure confirmation, physicochemical properties)\n'
+                '- Specifications and analytical procedures\n'
+                '- Reference standard description\n'
+                '- Container closure system\n'
+                '- Stability summary and conclusions\n\n'
+                '## 3.2.P — Drug Product\n'
+                '- Description and composition\n'
+                '- Pharmaceutical development rationale\n'
+                '- Manufacturing process description\n'
+                '- Control of excipients (IIG compliance)\n'
+                '- Drug product specifications\n'
+                '- Container closure system\n'
+                '- Stability summary'
+            ),
         }
         doc_description = doc_type_prompts.get(doc_type, 'a process development document')
 

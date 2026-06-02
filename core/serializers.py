@@ -3,6 +3,11 @@ from .models import (
     Project, Compound, CompoundProperty, Experiment, ExperimentResult,
     RiskAssessment, Document, ChatSession, ChatMessage,
     DrugInvestigation, AnalogCandidate, SynthesisPlan,
+    ProjectPhase, TargetProfile, VirtualScreeningRun, VirtualScreeningHit,
+    SAREntry, FormulationPlan, FormulationComponent, CompatibilityFlag, Excipient,
+    SaltPolymorphScreen, SaltScreenCandidate, SaltScreenExperiment,
+    StabilityPlan, StabilityCondition, StabilityResult,
+    AnalyticalMethod, Specification, PreclinicalStudy,
 )
 
 
@@ -147,3 +152,151 @@ class ChatSessionListSerializer(serializers.ModelSerializer):
 
     def get_message_count(self, obj):
         return obj.messages.count()
+
+
+# ─── v2 Serializers ───────────────────────────────────────────────────────────
+
+class ProjectPhaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectPhase
+        fields = '__all__'
+        extra_kwargs = {'project': {'required': False}}
+
+
+class TargetProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TargetProfile
+        fields = '__all__'
+
+
+class VirtualScreeningHitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VirtualScreeningHit
+        fields = '__all__'
+
+
+class VirtualScreeningRunSerializer(serializers.ModelSerializer):
+    hit_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VirtualScreeningRun
+        fields = '__all__'
+
+    def get_hit_count(self, obj):
+        return obj.hits.count()
+
+
+class SAREntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SAREntry
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at')
+        extra_kwargs = {'compound': {'required': False, 'allow_null': True}}
+
+
+class FormulationComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormulationComponent
+        fields = '__all__'
+        extra_kwargs = {'formulation_plan': {'required': False}}
+
+
+class CompatibilityFlagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompatibilityFlag
+        fields = '__all__'
+        extra_kwargs = {'formulation_plan': {'required': False}}
+
+
+class FormulationPlanSerializer(serializers.ModelSerializer):
+    components = FormulationComponentSerializer(many=True, read_only=True)
+    compatibility_flags = CompatibilityFlagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FormulationPlan
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class ExcipientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Excipient
+        fields = '__all__'
+
+
+class SaltScreenCandidateSerializer(serializers.ModelSerializer):
+    experiment_count = serializers.SerializerMethodField()
+
+    def get_experiment_count(self, obj):
+        return obj.experiments.count()
+
+    class Meta:
+        model = SaltScreenCandidate
+        fields = '__all__'
+        extra_kwargs = {'screen': {'required': False}}
+
+
+class SaltScreenExperimentSerializer(serializers.ModelSerializer):
+    candidate_name = serializers.SerializerMethodField()
+
+    def get_candidate_name(self, obj):
+        return obj.candidate.name if obj.candidate else None
+
+    class Meta:
+        model = SaltScreenExperiment
+        fields = '__all__'
+        extra_kwargs = {'screen': {'required': False}}
+
+
+class SaltPolymorphScreenSerializer(serializers.ModelSerializer):
+    candidates = SaltScreenCandidateSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SaltPolymorphScreen
+        fields = '__all__'
+        read_only_fields = ('project', 'compound', 'created_at', 'updated_at')
+
+
+class StabilityConditionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StabilityCondition
+        fields = '__all__'
+        extra_kwargs = {'plan': {'required': False}}
+
+
+class StabilityResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StabilityResult
+        fields = '__all__'
+        extra_kwargs = {'condition': {'required': False}}
+
+
+class StabilityPlanSerializer(serializers.ModelSerializer):
+    conditions = StabilityConditionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = StabilityPlan
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class AnalyticalMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnalyticalMethod
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class SpecificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Specification
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at')
+        extra_kwargs = {'analytical_method': {'required': False, 'allow_null': True}}
+
+
+class PreclinicalStudySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PreclinicalStudy
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')

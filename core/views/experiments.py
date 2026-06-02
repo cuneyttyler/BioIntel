@@ -24,6 +24,9 @@ class ExperimentListCreateView(generics.ListCreateAPIView):
         project_id = self.request.query_params.get('project_id')
         if project_id:
             qs = qs.filter(project_id=project_id)
+        plan_id = self.request.query_params.get('synthesis_plan')
+        if plan_id:
+            qs = qs.filter(synthesis_plan_id=plan_id)
         return qs
 
 

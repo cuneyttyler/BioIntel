@@ -1,0 +1,99 @@
+name,iig_limit,iig_unit,function,route,gras_status,incompatibilities,notes
+Microcrystalline Cellulose,,,Diluent/Binder,oral,True,[],AVICEL grades; most widely used tablet excipient
+Lactose Monohydrate,,,Diluent,oral,True,["reducing-sugar-sensitive APIs","amines"],"Maillard reaction with primary amines; avoid with amine APIs"
+Magnesium Stearate,1.5,%,Lubricant,oral,True,["strong acids","strong oxidising agents"],"Use at low concentrations (0.25-1.5%); prolongs disintegration at high levels"
+Stearic Acid,,,Lubricant,oral,True,[],Less sensitive than Mg stearate to over-blending
+Colloidal Silicon Dioxide (Aerosil),2.0,%,Glidant/Adsorbent,oral,True,[],Improves flow; use at 0.1-0.5% for glidant; up to 2% as adsorbent
+Sodium Starch Glycolate,8.0,%,Disintegrant,oral,True,[],Super-disintegrant; optimal 4-8%
+Croscarmellose Sodium,5.0,%,Disintegrant,oral,True,[],Super-disintegrant; 1-5%
+Crospovidone,,,Disintegrant,oral,True,[],Insoluble PVP cross-linked; 2-5%
+Povidone (PVP K30),,,Binder,oral/parenteral,True,[],Solution binder for wet granulation; also used in solid dispersions
+Hydroxypropyl Cellulose (HPC),,,Binder/Film-former,oral,True,[],Used in wet granulation and film coating
+Hydroxypropyl Methylcellulose (HPMC),,,Binder/Matrix-former/Film-former,oral,True,[],Extended-release matrix; film coating; low-viscosity grades for granulation
+Ethylcellulose,,,Film-former/Matrix-former,oral,True,[],Water-insoluble; used for extended-release coatings
+Polyethylene Glycol (PEG 400),,,Plasticizer/Solubilizer,oral/topical,True,["oxidising agents"],Used in film coatings and liquid formulations
+Polyethylene Glycol (PEG 4000),,,Carrier/Diluent,oral,True,[],Solid dispersion carrier; suppository base
+Polyvinyl Alcohol (PVA),,,Film-former,oral,True,[],Opadry II film coating
+Talc,,,Glidant/Lubricant,oral,True,[],Use in combination with Mg stearate; 1-5%
+Calcium Phosphate Dibasic,,,Diluent,oral,True,["tetracycline antibiotics"],"Calcium chelates tetracyclines; good compression properties"
+Mannitol,,,Diluent/Bulking agent,oral/parenteral,True,["strongly oxidising agents"],Low hygroscopicity; preferred for moisture-sensitive APIs; ODT formulations
+Sorbitol,,,Sweetener/Diluent,oral,True,[],Hygroscopic; suitable for liquid and chewable tablets
+Sucrose,,,Diluent/Sweetener,oral,True,["hydrolysing conditions"],Hygroscopic at >70% RH; reducing sugar
+Trehalose,,,Lyoprotectant,parenteral,True,[],Preferred lyoprotectant for biologics; non-reducing
+Propylene Glycol,35.0,mL (oral daily),Solvent/Co-solvent,oral/parenteral/topical,True,["oxidising agents"],ICH Q3C Class 3 solvent
+Glycerin (Glycerol),,,Humectant/Solvent,oral/topical,True,[],Widely used; hygroscopic
+Polysorbate 80 (Tween 80),25.0,mg/mL (IV),Surfactant/Solubilizer,oral/parenteral,True,["oxidising agents"],"Sensitisation risk at high IV doses; watch microbial contamination"
+Polysorbate 20 (Tween 20),,,Surfactant/Stabilizer,parenteral/topical,True,[],Lower CMC than Tween 80; used in biotech formulations
+Sodium Lauryl Sulfate,,,Surfactant/Wetting agent,oral,True,["cationic drugs"],"Anionic; may interact with cationic drugs; dissolution enhancer"
+Cremophor EL (PEG-35 Castor Oil),,,Solubilizer,parenteral/oral,True,[],IV formulations require premedication (hypersensitivity); Taxol vehicle
+Benzalkonium Chloride,0.1,%,Preservative,topical/ophthalmic,True,["anionic surfactants","soaps"],"Bactericidal; common ophthalmic preservative; irritating at high concentrations"
+Benzyl Alcohol,2.0,%,Preservative,parenteral,True,[],Neurotoxic in neonates (gasping syndrome); restricted in neonatal products
+Chlorocresol,0.1,%,Preservative,parenteral/topical,True,[],Used in multi-dose vials
+Phenol,0.5,%,Preservative,parenteral,True,["proteins at high concentrations"],"Classic preservative in insulin; protein stabilizer at low concentrations"
+m-Cresol,0.35,%,Preservative,parenteral,True,["proteins at high concentrations"],"Used in insulin formulations; preferred over phenol for some biologics"
+Methyl Paraben,0.2,%,Preservative,topical/oral,True,["anionic polymers"],Possible endocrine disruption concerns; widely used in topical products
+Propyl Paraben,0.02,%,Preservative,topical/oral,True,["anionic polymers"],Used in combination with methyl paraben
+EDTA (Disodium),0.1,%,Chelating agent/Preservative enhancer,oral/parenteral/topical,True,[],Enhances antimicrobial activity; metal chelator
+Sodium Chloride,,,Tonicity agent,parenteral,True,[],0.9% isotonic; adjust for other tonicity contributors
+Dextrose (D-Glucose),5.0,%,Tonicity agent/Energy source,parenteral,True,["reducing conditions"],5% isotonic; reducing sugar; not for Maillard-sensitive APIs
+Citric Acid,,,Buffering agent/Chelator,oral/parenteral,True,[],pH 3-6; also antioxidant synergist; flavoring
+Sodium Citrate,,,Buffering agent,oral/parenteral,True,[],Used with citric acid for citrate buffer
+Sodium Phosphate Monobasic,,,Buffering agent,parenteral,True,[],pH range 5-8
+Sodium Phosphate Dibasic,,,Buffering agent,parenteral,True,[],pH range 6-10
+Histidine,,,Buffering agent/Stabilizer,parenteral,True,[],Preferred buffer for biologics pH 5.5-7; also lyoprotection
+Acetate Buffer (Acetic acid/Sodium acetate),,,Buffering agent,parenteral/oral,True,[],pH 3.5-5.5; suitable for acid-stable APIs
+Tris (Trometamol),,,Buffering agent,parenteral,True,["strong acids"],pH range 7-9; used in biotech
+Succinic Acid,,,Buffering agent,oral,True,[],pH 3-6; good for acid-stable APIs
+Sodium Hydroxide,,,pH adjuster,parenteral/oral,True,[],Used to adjust final pH
+Hydrochloric Acid,,,pH adjuster,parenteral,True,[],Used to adjust pH in parenteral formulations
+Ascorbic Acid,0.1,%,Antioxidant,oral/parenteral,True,["metals","oxidising agents"],"pH sensitive; use below 4.0; monitor metal contamination"
+Sodium Metabisulfite,0.1,%,Antioxidant,parenteral,True,["adrenaline/epinephrine"],Sulfite sensitivity in asthmatics; restricted in some jurisdictions
+BHT (Butylated Hydroxytoluene),0.02,%,Antioxidant,oral,True,["oxidising agents"],Lipid-soluble antioxidant; fat-containing formulations
+BHA (Butylated Hydroxyanisole),0.02,%,Antioxidant,oral,True,["oxidising agents"],Lipid-soluble antioxidant
+Tocopherol (Vitamin E),,,Antioxidant,oral/topical,True,[],Natural antioxidant; also used in nanoemulsions
+Nitrogen (N2),,,Inert gas/Headspace protection,parenteral/oral,True,[],Purge vials/ampoules to displace oxygen
+Human Serum Albumin (HSA),,,Stabilizer,parenteral,False,[],Biologic stabilizer; risk of prion/virus transmission; use recombinant
+Poloxamer 188,,,Surfactant/Stabilizer,parenteral/oral,True,[],Anti-foaming; shear protection for biologics; IV compatible
+Cyclodextrin (beta-CD),,,Solubilizer/Stabilizer,oral,True,["lipophilic compounds"],Forms inclusion complexes; HP-beta-CD preferred for parenteral
+HP-beta-Cyclodextrin,,,Solubilizer,oral/parenteral,True,[],IV compatible; renal excretion; widely used for poorly soluble drugs
+Castor Oil,,,Solvent/Emollient,oral/topical,True,[],Vehicle for oily injections; laxative at oral doses
+Sesame Oil,,,Vehicle,parenteral,True,["penicillin allergy (cross-reaction possible)"],Used for IM depot injections; possible allergy
+Medium Chain Triglycerides (MCT),,,Lipid vehicle/Solubilizer,oral/parenteral,True,[],Lipid-based drug delivery; PN formulations
+Soybean Oil,,,Lipid vehicle,parenteral,True,["soy allergy"],PN emulsions; propofol vehicle
+Lecithin (Phosphatidylcholine),,,Emulsifier/Liposome component,oral/parenteral,True,["oxidising agents"],Natural surfactant; lipid emulsions and liposomes
+Cholesterol,,,Membrane stabilizer,parenteral,True,[],Liposome formulations; controls membrane rigidity
+DSPC (Distearoylphosphatidylcholine),,,Liposome component,parenteral,True,[],High-Tm lipid for stable liposomes
+DOTAP,,,Lipid nanoparticle component,parenteral,False,[],Cationic lipid for LNP; mRNA delivery
+Ionizable Lipid (MC3/DLin-MC3-DMA),,,LNP component,parenteral,False,[],mRNA LNP delivery; pH-sensitive
+PEG-lipid,,,LNP/Liposome stabilizer,parenteral,False,[],Stealth coating; extends circulation time; ADA risk
+PLGA (Poly lactic-co-glycolic acid),,,Microsphere/Nanoparticle matrix,parenteral,True,[],Biodegradable; controlled-release; FDA approved
+PLA (Polylactic acid),,,Biodegradable polymer,parenteral,True,[],Biodegradable; controlled-release
+Chitosan,,,Mucoadhesive polymer,oral/nasal,True,["polyanions"],Mucoadhesive; enhances nasal/GI absorption; biodegradable
+Carbomer (Carbopol),,,Gelling agent/Thickener,topical,True,["strong acids","cationic drugs"],pH-sensitive gel; crosslinked polyacrylic acid; neutralize to gel
+Methylcellulose,,,Viscosity enhancer/Ophthalmic vehicle,oral/ophthalmic,True,[],Suspending agent; ophthalmic lubricant; thermally reversible gel
+Carboxymethylcellulose Sodium,,,Viscosity enhancer/Suspending agent,oral/topical,True,["strong acids"],Anionic; suspending agent; eye drops
+Xanthan Gum,,,Viscosity enhancer/Suspending agent,oral/topical,True,[],Pseudoplastic; stable over wide pH range
+Carrageenan,,,Gelling agent,oral,True,[],Ionic gelling agent; lambda-carrageenan non-gelling
+Gelatin,,,Capsule shell/Gelling agent,oral,True,["formaldehyde (cross-linking)"],Bovine/porcine origin; religious restrictions; cross-linking risk
+HPMC Capsules,,,Capsule shell,oral,True,[],Vegetarian alternative to gelatin capsules; suitable for hygroscopic fills
+Starch (Corn/Potato),,,Diluent/Disintegrant/Binder,oral,True,[],Native starch; pregelatinized for direct compression
+Pregelatinized Starch,,,Binder/Disintegrant,oral,True,[],Self-binder; direct compression; also disintegrant
+Fumaric Acid,,,Acidifier/Lubricant,oral,True,[],Used as pH modifier; also tableting lubricant (stearyl fumarate alternative)
+Sodium Stearyl Fumarate (Pruv),,,Lubricant,oral,True,[],Alternative to Mg stearate; less sensitive to blending time; suitable for moisture-sensitive APIs
+Zinc Stearate,,,Lubricant,oral,True,[],Less common; used when Mg or Ca cations are undesirable
+Palmitic Acid,,,Lipid excipient,oral,True,[],Solid lipid nanoparticles; wax matrix tablets
+Beeswax,,,Matrix-forming wax,oral,True,[],Hydrophobic matrix tablets; modified-release coatings
+Carnauba Wax,,,Film-former/Gloss agent,oral,True,[],Tablet polishing; wax coating
+Titanium Dioxide,1.0,%,Opacifier/Colorant,oral,True,[],White pigment in film coatings; opacity agent
+Iron Oxides,,,Colorant,oral,True,[],Red/yellow/black shades in film coatings
+FD&C Blue No. 1,,,Colorant,oral,True,[],Water-soluble; certified color
+FD&C Red No. 40,,,Colorant,oral,True,[],Water-soluble; most widely used red
+FD&C Yellow No. 5 (Tartrazine),,,Colorant,oral,True,[],Hypersensitivity in aspirin-sensitive patients; labeling required
+Saccharin Sodium,,,Sweetener,oral,True,[],Bitter aftertaste; avoid in patients with sulfonamide allergy
+Aspartame,,,Sweetener,oral,True,[],Contraindicated in PKU; unstable in moisture
+Acesulfame Potassium,,,Sweetener,oral,True,[],Heat stable; used with other sweeteners to mask aftertaste
+Sucralose,,,Sweetener,oral,True,[],600× sweeter than sucrose; very stable
+Peppermint Oil,,,Flavoring,oral,True,["homeopathic products"],Cooling sensation; widely used in oral liquids and chewables
+Sodium Benzoate,0.1,%,Preservative,oral,True,["ascorbic acid (benzene formation)"],Antimicrobial at acidic pH; avoid with vitamin C
+Potassium Sorbate,0.2,%,Preservative,oral/topical,True,[],Effective at pH 3-6; mold/yeast inhibitor
+Sorbic Acid,0.2,%,Preservative,topical/oral,True,[],Convert to potassium sorbate for water-soluble form

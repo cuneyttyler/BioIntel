@@ -11,7 +11,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
     <div class="main-area">
       <TopBar />
       <main class="page-content">
-        <router-view />
+        <router-view :key="$route.fullPath" />
       </main>
     </div>
     <ToastNotification />

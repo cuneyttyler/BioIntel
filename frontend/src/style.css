@@ -169,6 +169,156 @@ a:hover {
 
 .top-bar .spacer { flex: 1; }
 
+/* Project chip in SideNav */
+.nav-project-chip {
+  margin: 8px 10px;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.nav-project-chip-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nav-project-icon {
+  color: var(--primary);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.nav-project-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-project-exit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.nav-project-exit:hover { opacity: 1; }
+
+.nav-project-badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e0e7ff;
+  color: #3730a3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Pipeline nav links */
+.nav-pipeline-link {
+  padding-left: 12px !important;
+}
+
+.nav-phase-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+  cursor: default;
+  user-select: none;
+}
+
+.nav-subitem {
+  padding-left: 36px !important;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.nav-stage-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.nav-link.router-link-active .nav-stage-num,
+.nav-link:hover .nav-stage-num {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Project chip in TopBar */
+.topbar-project-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  max-width: 260px;
+}
+
+.topbar-project-chip:hover { background: #dde4ff; }
+
+.topbar-project-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.topbar-project-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-project-phase {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
 /* Page Header */
 .page-header {
   display: flex;
