@@ -62,3 +62,5 @@ htmlcov/
 *.bak
 *.tmp
 Thumbs.db
+
+rag_corpus

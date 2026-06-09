@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useAnalyticalStore } from '@/stores/analytical'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -265,6 +266,16 @@ async function deleteSpec(id) {
   await store.deleteSpecification(id)
   deletingId.value = null
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'SpecificationBuilder',
+  projectIdRef: projectIdNum,
+  getEntity: () => (form.value),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => { if (k in form.value) form.value[k] = v })
+  },
+})
 
 onMounted(async () => {
   await Promise.all([

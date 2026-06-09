@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useFormulationStore } from '@/stores/formulation'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -231,6 +232,16 @@ function flagColor(severity) {
 function componentTypeLabel(val) {
   return COMPONENT_TYPES.find(t => t.value === val)?.label || val
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'FormulationPlanning',
+  projectIdRef: projectIdNum,
+  getEntity: () => (newPlanForm.value),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => { if (k in newPlanForm.value) newPlanForm.value[k] = v })
+  },
+})
 
 onMounted(async () => {
   await store.fetchPlan(projectId)

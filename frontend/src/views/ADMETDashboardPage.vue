@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { usePreclinicalStore } from '@/stores/preclinical'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -246,6 +247,16 @@ const ICH_ADMET_CONTEXT = [
   { flag: 'Low solubility (BCS II/IV)', guideline: 'ICH M9 (BCS biowaiver)', action: 'Solubility-enabling formulation needed (amorphous dispersion, nanoparticle, lipid system). In vitro dissolution predictive of in vivo performance.', severity: 'info' },
   { flag: 'Skin sensitization flag', guideline: 'ICH S10 / REACH', action: 'DPRA, KeratinoSens, h-CLAT in vitro assays. In vivo LLNA if required by guideline. GHS Category 1 labeling if confirmed.', severity: 'medium' },
 ]
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'ADMETDashboard',
+  projectIdRef: projectIdNum,
+  getEntity: () => ({ molecule_type: store.admetData?.molecule_type || "" }),
+  applyFn: (s) => {
+    // ADMET Dashboard is display-only; no form fields to apply
+  },
+})
 
 onMounted(() => store.fetchADMETDashboard(projectId))
 </script>

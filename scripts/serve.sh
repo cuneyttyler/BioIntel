@@ -4,10 +4,12 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 GUNICORN_PID=""
+TUNNEL_PID=""
 
 cleanup() {
     echo ""
     echo "Stopping servers..."
+    [ -n "$TUNNEL_PID" ] && kill "$TUNNEL_PID" 2>/dev/null
     [ -n "$GUNICORN_PID" ] && kill "$GUNICORN_PID" 2>/dev/null && echo "  ✓ gunicorn stopped"
     exit 0
 }
@@ -26,6 +28,10 @@ echo "▶ Starting gunicorn on http://127.0.0.1:8000 ..."
 gunicorn backend.wsgi:application \
     --bind 127.0.0.1:8000 \
     --workers 2 \
+    --worker-class gthread \
+    --threads 4 \
+    --timeout 0 \
+    --keep-alive 2 \
     --log-level warning \
     --access-logfile - \
     &
@@ -61,4 +67,16 @@ echo "  Note: First-time visitors must click 'I agree' on the loca.lt landing pa
 echo "  Press Ctrl+C to stop all servers."
 echo ""
 
-lt --port 8000 --subdomain biointel
+# Run localtunnel in a restart loop so a dropped connection never kills the server
+tunnel_loop() {
+    while true; do
+        lt --port 8000 --subdomain biointel 2>&1 || true
+        echo "  ⚠ localtunnel exited, restarting in 3s..."
+        sleep 3
+    done
+}
+tunnel_loop &
+TUNNEL_PID=$!
+
+# Keep script alive until gunicorn exits (i.e. until Ctrl+C)
+wait $GUNICORN_PID

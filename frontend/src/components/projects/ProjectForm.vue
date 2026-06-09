@@ -12,6 +12,8 @@ const form = reactive({
   phase: props.initial.phase || 'preclinical',
   status: props.initial.status || 'active',
   pathway: props.initial.pathway || 'analog_based',
+  mode: props.initial.mode || 'manual',
+  molecule_type: props.initial.molecule_type || 'small_molecule',
 })
 
 watch(() => form.pathway, (val) => emit('update:pathway', val))
@@ -24,7 +26,11 @@ const submit = () => {
   emit('submit', { ...form })
 }
 
-defineExpose({ triggerSubmit: submit })
+function setField(key, value) {
+  if (key in form) form[key] = value
+}
+
+defineExpose({ triggerSubmit: submit, setField })
 </script>
 
 <template>
@@ -68,6 +74,24 @@ defineExpose({ triggerSubmit: submit })
           <option value="archived">Archived</option>
         </select>
       </div>
+      <div class="form-group">
+        <label class="form-label">Molecule Type</label>
+        <select v-model="form.molecule_type" class="form-control">
+          <option value="small_molecule">Small Molecule</option>
+          <option value="biologic">Biologic (mAb, protein, ADC…)</option>
+          <option value="undetermined">Undetermined</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project Mode</label>
+      <select v-model="form.mode" class="form-control">
+        <option value="manual">Manual — standard v2 workflow</option>
+        <option value="ai_driven">AI-Driven — autonomous plan with human-in-the-loop gates</option>
+      </select>
+      <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0">
+        AI-Driven mode adds an AI-authored development plan to your project. You can switch from Manual to AI-Driven at any time.
+      </p>
     </div>
   </form>
 </template>

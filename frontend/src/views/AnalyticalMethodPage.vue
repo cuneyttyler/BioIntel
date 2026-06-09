@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useAnalyticalStore } from '@/stores/analytical'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -249,6 +250,16 @@ function methodColor(type) {
 
 watch(() => store.currentMethod, (m) => {
   if (m) { loadDefForm(m); loadParams(m) }
+})
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'AnalyticalMethod',
+  projectIdRef: projectIdNum,
+  getEntity: () => (newMethodForm.value),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => { if (k in newMethodForm.value) newMethodForm.value[k] = v })
+  },
 })
 
 onMounted(async () => {

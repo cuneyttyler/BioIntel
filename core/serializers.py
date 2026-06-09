@@ -8,6 +8,10 @@ from .models import (
     SaltPolymorphScreen, SaltScreenCandidate, SaltScreenExperiment,
     StabilityPlan, StabilityCondition, StabilityResult,
     AnalyticalMethod, Specification, PreclinicalStudy,
+    AIPlan, AIPlanStep, AIPlanDiscussion, AILabSession,
+    RagDocument, RagChunk,
+    CellLineDevelopment, BioprocessDevelopment, DownstreamPurification,
+    BiologicsFormulation, BiologicsCharacterizationMethod,
 )
 
 
@@ -298,5 +302,96 @@ class SpecificationSerializer(serializers.ModelSerializer):
 class PreclinicalStudySerializer(serializers.ModelSerializer):
     class Meta:
         model = PreclinicalStudy
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+# ─── v3 Serializers ───────────────────────────────────────────────────────────
+
+class AIPlanStepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIPlanStep
+        fields = '__all__'
+        read_only_fields = ('plan', 'created_at', 'updated_at')
+
+
+class AIPlanDiscussionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIPlanDiscussion
+        fields = '__all__'
+        read_only_fields = ('plan', 'created_at')
+
+
+class AIPlanSerializer(serializers.ModelSerializer):
+    steps = AIPlanStepSerializer(many=True, read_only=True)
+    discussion_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AIPlan
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+    def get_discussion_count(self, obj):
+        return obj.discussions.count()
+
+
+class AIPlanListSerializer(serializers.ModelSerializer):
+    step_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = AIPlan
+        fields = ['id', 'project', 'status', 'molecule_type', 'step_count', 'current_step_number', 'created_at', 'updated_at']
+
+
+class AILabSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AILabSession
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at')
+
+
+class RagDocumentSerializer(serializers.ModelSerializer):
+    chunk_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RagDocument
+        fields = '__all__'
+        read_only_fields = ('created_at', 'ingestion_status', 'page_count')
+
+    def get_chunk_count(self, obj):
+        return obj.chunks.count()
+
+
+class CellLineDevelopmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CellLineDevelopment
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class BioprocessDevelopmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BioprocessDevelopment
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class DownstreamPurificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DownstreamPurification
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class BiologicsFormulationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BiologicsFormulation
+        fields = '__all__'
+        read_only_fields = ('project', 'created_at', 'updated_at')
+
+
+class BiologicsCharacterizationMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BiologicsCharacterizationMethod
         fields = '__all__'
         read_only_fields = ('project', 'created_at', 'updated_at')

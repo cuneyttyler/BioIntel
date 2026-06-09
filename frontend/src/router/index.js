@@ -36,6 +36,19 @@ const routes = [
   { path: '/projects/:id/specifications', name: 'SpecificationBuilder', component: () => import('@/views/SpecificationBuilderPage.vue') },
   { path: '/projects/:id/preclinical', name: 'PreclinicalStudyPlanner', component: () => import('@/views/PreclinicalStudyPlannerPage.vue') },
   { path: '/projects/:id/admet', name: 'ADMETDashboard', component: () => import('@/views/ADMETDashboardPage.vue') },
+
+  // ─── v3 routes ────────────────────────────────────────────────────────────
+  { path: '/ai-lab', name: 'AILab', component: () => import('@/views/AILabPage.vue') },
+  { path: '/documents', name: 'DocumentPortal', component: () => import('@/views/DocumentPortalPage.vue') },
+  { path: '/projects/:id/ai-plan', name: 'AIPlan', component: () => import('@/views/AIPlanDetailPage.vue') },
+  { path: '/projects/:id/cell-line', name: 'CellLineDevelopment', component: () => import('@/views/CellLineDevelopmentPage.vue') },
+  { path: '/projects/:id/bioprocessing', name: 'UpstreamBioprocessing', component: () => import('@/views/UpstreamBioprocessingPage.vue') },
+  { path: '/projects/:id/purification', name: 'DownstreamPurification', component: () => import('@/views/DownstreamPurificationPage.vue') },
+  { path: '/projects/:id/biologic-analytics', name: 'BiologicsAnalytics', component: () => import('@/views/BiologicsAnalyticsPage.vue') },
+  { path: '/projects/:id/biologic-formulation', name: 'BiologicsFormulation', component: () => import('@/views/BiologicsFormulationPage.vue') },
+
+  // ─── Settings ─────────────────────────────────────────────────────────────
+  { path: '/settings', name: 'Settings', component: () => import('@/views/SettingsPage.vue') },
 ]
 
 export default createRouter({

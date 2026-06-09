@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { synthesisPlan as synthesisPlanApi } from '@/services/api'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const router = useRouter()
@@ -45,6 +46,16 @@ const addImpurity = () => {
 const removeImpurity = (id) => {
   impurities.value = impurities.value.filter(i => i.id !== id)
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'ProcessDevelopment',
+  projectIdRef: projectIdNum,
+  getEntity: () => ({ cppNotes: cppNotes.value }),
+  applyFn: (s) => {
+    if (s.cppNotes !== undefined) cppNotes.value = s.cppNotes
+  },
+})
 
 onMounted(async () => {
   try {

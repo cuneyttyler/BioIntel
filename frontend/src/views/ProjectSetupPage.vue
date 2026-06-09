@@ -7,6 +7,8 @@ import { useUIStore } from '@/stores/ui'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ProjectForm from '@/components/projects/ProjectForm.vue'
+import AIPlanTimeline from '@/components/ai-plan/AIPlanTimeline.vue'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const router = useRouter()
@@ -85,16 +87,26 @@ const showTpp = ref(false)
 
 function loadTpp() {
   if (!route.params.id) return
+  // Prefer backend value; fall back to localStorage for data saved before this fix
+  const backendTpp = existingProject.value?.tpp_data
+  if (backendTpp && Object.keys(backendTpp).length > 0) {
+    Object.assign(tpp.value, backendTpp)
+    return
+  }
   const stored = localStorage.getItem(TPP_STORAGE_KEY.value)
   if (stored) {
     try { Object.assign(tpp.value, JSON.parse(stored)) } catch { /* ignore */ }
   }
 }
 
-function saveTpp() {
+async function saveTpp() {
   if (!route.params.id) return
-  localStorage.setItem(TPP_STORAGE_KEY.value, JSON.stringify(tpp.value))
-  ui.addToast('TPP saved locally', 'success')
+  try {
+    await projectStore.updateProject(route.params.id, { tpp_data: tpp.value })
+    ui.addToast('TPP saved', 'success')
+  } catch {
+    ui.addToast('Failed to save TPP', 'error')
+  }
 }
 
 const tppFilled = computed(() => Object.values(tpp.value).some(v => v && v.trim()))
@@ -163,14 +175,65 @@ onMounted(async () => {
   }
 })
 
+const projectIdRef = computed(() => route.params.id ? parseInt(route.params.id) : null)
+
+useAIPageContext({
+  pageType: 'ProjectEdit',
+  projectIdRef,
+  getEntity: () => ({
+    name: existingProject.value?.name || '',
+    description: existingProject.value?.description || '',
+    pathway: existingProject.value?.pathway || '',
+    phase: existingProject.value?.phase || '',
+    molecule_type: existingProject.value?.molecule_type || '',
+    tpp_indication: tpp.value.indication,
+    tpp_patient_population: tpp.value.patient_population,
+    tpp_route: tpp.value.route_of_admin,
+    tpp_dosage_form: tpp.value.dosage_form,
+    tpp_dose: tpp.value.dose,
+    tpp_frequency: tpp.value.frequency,
+    tpp_comparator: tpp.value.comparator,
+    tpp_primary_efficacy: tpp.value.primary_efficacy,
+    tpp_primary_safety: tpp.value.primary_safety,
+    tpp_target_claims: tpp.value.target_claims,
+    tpp_special_populations: tpp.value.special_populations,
+    tpp_contraindications: tpp.value.contraindications,
+  }),
+  applyFn: (s) => {
+    if (projectFormRef.value) {
+      Object.entries(s).forEach(([k, v]) => {
+        if (!k.startsWith('tpp_')) projectFormRef.value.setField(k, v)
+      })
+    }
+    const tppMap = {
+      tpp_indication: 'indication',
+      tpp_patient_population: 'patient_population',
+      tpp_route: 'route_of_admin',
+      tpp_dosage_form: 'dosage_form',
+      tpp_dose: 'dose',
+      tpp_frequency: 'frequency',
+      tpp_comparator: 'comparator',
+      tpp_primary_efficacy: 'primary_efficacy',
+      tpp_primary_safety: 'primary_safety',
+      tpp_target_claims: 'target_claims',
+      tpp_special_populations: 'special_populations',
+      tpp_contraindications: 'contraindications',
+    }
+    Object.entries(s).forEach(([k, v]) => {
+      if (tppMap[k]) tpp.value[tppMap[k]] = v
+    })
+  },
+})
+
 const handleSubmit = async (formData) => {
   saving.value = true
   try {
+    const payload = { ...formData, tpp_data: tpp.value }
     let project
     if (isEdit) {
-      project = await projectStore.updateProject(route.params.id, formData)
+      project = await projectStore.updateProject(route.params.id, payload)
     } else {
-      project = await projectStore.createProject(formData)
+      project = await projectStore.createProject(payload)
     }
     if (!isEdit && pendingReferenceDrug.value) {
       await investApi.create({ ...pendingReferenceDrug.value, project: project.id })
@@ -402,7 +465,7 @@ const handleSubmit = async (formData) => {
             <textarea v-model="tpp.target_claims" class="form-control" rows="2" placeholder="e.g. Reduction in CV events, weight neutral, once-daily dosing" />
           </div>
           <div class="tpp-note">
-            TPP is saved locally in your browser. Export to documents when ready for team sharing.
+            TPP is saved with the project. It is also included when you save the main project form above.
           </div>
           <button class="btn btn-primary" style="margin-top:10px" @click="saveTpp">Save TPP</button>
         </div>
@@ -428,6 +491,15 @@ const handleSubmit = async (formData) => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- AI-Driven Plan section (edit mode, AI-Driven projects only) -->
+      <div v-if="isEdit && existingProject?.mode === 'ai_driven'" class="card mb-4">
+        <div class="section-top">
+          <div class="card-title" style="margin-bottom:0">✦ AI-Driven Plan</div>
+          <RouterLink :to="`/projects/${route.params.id}/ai-plan`" class="btn btn-primary btn-sm">View Full Plan →</RouterLink>
+        </div>
+        <AIPlanTimeline :project-id="parseInt(route.params.id)" @create-plan="() => {}" />
       </div>
 
     </template>

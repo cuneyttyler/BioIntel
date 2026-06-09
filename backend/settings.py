@@ -8,6 +8,8 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',') + ['biointel.loca.lt']
 
 ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+MISTRAL_API_KEY = config('MISTRAL_API_KEY', default='')
 EPA_COMPTOX_API_KEY = config('EPA_COMPTOX_API_KEY', default='')
 
 INSTALLED_APPS = [
@@ -33,6 +35,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.SSEMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'

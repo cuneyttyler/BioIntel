@@ -6,6 +6,8 @@ export const useUIStore = defineStore('ui', {
   state: () => ({
     toasts: [],
     dialog: null,
+    sidenavOpen: false,
+    navCollapsed: false,
   }),
 
   actions: {
@@ -28,6 +30,18 @@ export const useUIStore = defineStore('ui', {
     closeDialog(result) {
       if (this.dialog?.resolve) this.dialog.resolve(result)
       this.dialog = null
+    },
+
+    toggleSidenav() {
+      this.sidenavOpen = !this.sidenavOpen
+    },
+
+    closeSidenav() {
+      this.sidenavOpen = false
+    },
+
+    toggleNavCollapsed() {
+      this.navCollapsed = !this.navCollapsed
     },
   },
 })

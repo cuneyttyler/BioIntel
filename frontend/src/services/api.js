@@ -255,6 +255,79 @@ export const context = {
   preclinicalStudy: (id) => api.get(`/preclinical-studies/${id}/context/`),
 }
 
+// ─── v3 API modules ──────────────────────────────────────────────────────────
+
+export const aiPlan = {
+  get: (projectId) => api.get(`/projects/${projectId}/ai-plan/`),
+  create: (projectId, data) => api.post(`/projects/${projectId}/ai-plan/`, data),
+  update: (planId, data) => api.patch(`/ai-plans/${planId}/`, data),
+  getById: (planId) => api.get(`/ai-plans/${planId}/`),
+  compressContext: (planId) => api.post(`/ai-plans/${planId}/compress-context/`),
+  // Steps
+  getStep: (stepId) => api.get(`/ai-plan-steps/${stepId}/`),
+  updateStep: (stepId, data) => api.patch(`/ai-plan-steps/${stepId}/`, data),
+  approveStep: (stepId) => api.post(`/ai-plan-steps/${stepId}/approve/`),
+  rejectStep: (stepId, feedback) => api.post(`/ai-plan-steps/${stepId}/reject/`, { feedback }),
+  skipStep: (stepId) => api.post(`/ai-plan-steps/${stepId}/skip/`),
+  goBack: (stepId, targetStepNumber) => api.post(`/ai-plan-steps/${stepId}/go-back/`, { target_step_number: targetStepNumber }),
+  getDiscussions: (stepId) => api.get(`/ai-plan-steps/${stepId}/discussions/`),
+  executeAction: (stepId, actionId, actionType, data) =>
+    api.post(`/ai-plan-steps/${stepId}/execute-action/`, { action_id: actionId, action_type: actionType, data }),
+}
+
+export const aiLab = {
+  sessions: () => api.get('/ai-lab/sessions/'),
+  createSession: (data) => api.post('/ai-lab/sessions/', data),
+  getSession: (id) => api.get(`/ai-lab/sessions/${id}/`),
+  createProject: (id, data) => api.post(`/ai-lab/sessions/${id}/create-project/`, data),
+}
+
+export const ragDocuments = {
+  list: (params) => api.get('/documents/', { params }),
+  get: (id) => api.get(`/documents/${id}/`),
+  delete: (id) => api.delete(`/documents/${id}/`),
+  search: (params) => api.get('/documents/search/', { params }),
+  ingest: (id) => api.post(`/documents/${id}/ingest/`),
+}
+
+export const biologics = {
+  cellLine: {
+    list: (projectId) => api.get(`/projects/${projectId}/cell-line/`),
+    create: (projectId, data) => api.post(`/projects/${projectId}/cell-line/`, data),
+    get: (id) => api.get(`/cell-line/${id}/`),
+    update: (id, data) => api.patch(`/cell-line/${id}/`, data),
+    delete: (id) => api.delete(`/cell-line/${id}/`),
+  },
+  bioprocessing: {
+    list: (projectId) => api.get(`/projects/${projectId}/bioprocessing/`),
+    create: (projectId, data) => api.post(`/projects/${projectId}/bioprocessing/`, data),
+    get: (id) => api.get(`/bioprocessing/${id}/`),
+    update: (id, data) => api.patch(`/bioprocessing/${id}/`, data),
+    delete: (id) => api.delete(`/bioprocessing/${id}/`),
+  },
+  purification: {
+    list: (projectId) => api.get(`/projects/${projectId}/purification/`),
+    create: (projectId, data) => api.post(`/projects/${projectId}/purification/`, data),
+    get: (id) => api.get(`/purification/${id}/`),
+    update: (id, data) => api.patch(`/purification/${id}/`, data),
+    delete: (id) => api.delete(`/purification/${id}/`),
+  },
+  formulation: {
+    list: (projectId) => api.get(`/projects/${projectId}/biologic-formulation/`),
+    create: (projectId, data) => api.post(`/projects/${projectId}/biologic-formulation/`, data),
+    get: (id) => api.get(`/biologic-formulation/${id}/`),
+    update: (id, data) => api.patch(`/biologic-formulation/${id}/`, data),
+    delete: (id) => api.delete(`/biologic-formulation/${id}/`),
+  },
+  analytics: {
+    list: (projectId) => api.get(`/projects/${projectId}/biologic-analytics/`),
+    create: (projectId, data) => api.post(`/projects/${projectId}/biologic-analytics/`, data),
+    get: (id) => api.get(`/biologic-analytics/${id}/`),
+    update: (id, data) => api.patch(`/biologic-analytics/${id}/`, data),
+    delete: (id) => api.delete(`/biologic-analytics/${id}/`),
+  },
+}
+
 // Unified namespace for stores — avoids importing every named export individually
 export const apiClient = {
   projects, compounds, diseases, targets, experiments, risk, synthesis,
@@ -263,6 +336,8 @@ export const apiClient = {
   // v2
   projectPhases, virtualScreening, sar, formulation, excipients,
   saltScreening, stability, analytical, specifications, preclinical, context,
+  // v3
+  aiPlan, aiLab, ragDocuments, biologics,
 }
 
 export async function* createSSEStream(url, options = {}) {

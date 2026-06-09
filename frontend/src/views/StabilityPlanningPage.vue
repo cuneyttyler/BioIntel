@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useStabilityStore } from '@/stores/stability'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -226,6 +227,19 @@ function timepointLabel(weeks) {
   const found = ICH_TIMEPOINTS.find(t => Math.abs(t.weeks - weeks) < 1)
   return found ? found.label : `${weeks}w`
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'StabilityPlanning',
+  projectIdRef: projectIdNum,
+  getEntity: () => ({ ...newPlanForm.value, ...conditionForm.value }),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => {
+      if (k in newPlanForm.value) newPlanForm.value[k] = v
+      if (k in conditionForm.value) conditionForm.value[k] = v
+    })
+  },
+})
 
 onMounted(async () => {
   await store.fetchPlan(projectId)

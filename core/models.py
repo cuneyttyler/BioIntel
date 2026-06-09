@@ -18,12 +18,24 @@ class Project(models.Model):
         ('analog_based', 'Analog-Based Development'),
         ('novel_design', 'Novel Drug Design'),
     ]
+    MODE_CHOICES = [
+        ('manual', 'Manual'),
+        ('ai_driven', 'AI-Driven'),
+    ]
+    MOLECULE_TYPE_CHOICES = [
+        ('small_molecule', 'Small Molecule'),
+        ('biologic', 'Biologic'),
+        ('undetermined', 'Undetermined'),
+    ]
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES, default='preclinical')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     pathway = models.CharField(max_length=20, choices=PATHWAY_CHOICES, default='analog_based')
+    mode = models.CharField(max_length=20, choices=MODE_CHOICES, default='manual')
+    molecule_type = models.CharField(max_length=20, choices=MOLECULE_TYPE_CHOICES, default='small_molecule')
+    tpp_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -40,6 +52,7 @@ class Compound(models.Model):
     inchi_key = models.CharField(max_length=27, blank=True)
     molecular_formula = models.CharField(max_length=100, blank=True)
     molecular_weight = models.FloatField(null=True, blank=True)
+    sequence = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -796,3 +809,396 @@ class PreclinicalStudy(models.Model):
 
     def __str__(self):
         return f"{self.study_type} study for {self.project.name}"
+
+
+# ─── v3 Models ───────────────────────────────────────────────────────────────
+
+class AIPlan(models.Model):
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('archived', 'Archived'),
+    ]
+    MOLECULE_TYPE_CHOICES = [
+        ('small_molecule', 'Small Molecule'),
+        ('biologic', 'Biologic'),
+        ('undetermined', 'Undetermined'),
+    ]
+
+    project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name='ai_plan')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    molecule_type = models.CharField(max_length=20, choices=MOLECULE_TYPE_CHOICES, default='small_molecule')
+    disease_description = models.TextField(blank=True)
+    constraints = models.JSONField(default=dict)
+    conversation_context = models.JSONField(default=dict)
+    step_count = models.IntegerField(default=0)
+    current_step_number = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"AIPlan for {self.project.name} ({self.status})"
+
+
+class AIPlanStep(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('awaiting_approval', 'Awaiting Approval'),
+        ('approved', 'Approved'),
+        ('revision_needed', 'Revision Needed'),
+        ('completed', 'Completed'),
+        ('skipped', 'Skipped'),
+        ('abandoned', 'Abandoned'),
+    ]
+    PHASE_CHOICES = [
+        ('discovery', 'Discovery'),
+        ('lead_optimization', 'Lead Optimization'),
+        ('drug_substance', 'Drug Substance Development'),
+        ('drug_product', 'Drug Product Development'),
+        ('analytical', 'Analytical Development'),
+        ('preclinical', 'Preclinical Development'),
+        ('regulatory', 'Regulatory'),
+    ]
+
+    plan = models.ForeignKey(AIPlan, on_delete=models.CASCADE, related_name='steps')
+    step_number = models.IntegerField()
+    phase = models.CharField(max_length=30, choices=PHASE_CHOICES)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pending')
+    ai_recommendation = models.JSONField(default=dict)
+    ai_reasoning = models.TextField(blank=True)
+    scientist_feedback = models.TextField(blank=True)
+    entities_created = models.JSONField(default=list)
+    experiment_required = models.BooleanField(default=False)
+    experiment = models.ForeignKey(
+        'Experiment', on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_plan_steps'
+    )
+    rag_sources = models.JSONField(default=list)
+    suggested_actions = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['step_number']
+
+    def __str__(self):
+        return f"Step {self.step_number}: {self.title} ({self.status})"
+
+
+class AIPlanDiscussion(models.Model):
+    ROLE_CHOICES = [
+        ('ai', 'AI'),
+        ('scientist', 'Scientist'),
+    ]
+
+    plan = models.ForeignKey(AIPlan, on_delete=models.CASCADE, related_name='discussions')
+    step = models.ForeignKey(AIPlanStep, on_delete=models.SET_NULL, null=True, blank=True, related_name='discussions')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    tool_calls = models.JSONField(default=list)
+    sources = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.role}: {self.content[:60]}"
+
+
+class AILabSession(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('abandoned', 'Abandoned'),
+    ]
+
+    title = models.CharField(max_length=255, default='New AI Lab Session')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    messages = models.JSONField(default=list)
+    proposal = models.JSONField(default=dict)
+    created_project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='lab_sessions'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+
+class RagDocument(models.Model):
+    DOCUMENT_TYPE_CHOICES = [
+        ('ich_guideline', 'ICH Guideline'),
+        ('academic_paper', 'Academic Paper'),
+        ('lab_report', 'Lab Report'),
+        ('regulatory', 'Regulatory Submission'),
+        ('internal', 'Internal Study'),
+        ('competitor_analysis', 'Competitor Analysis'),
+        ('clinical_data', 'Clinical Data'),
+        ('other', 'Other'),
+    ]
+    MOLECULE_TYPE_CHOICES = [
+        ('small_molecule', 'Small Molecule'),
+        ('biologic', 'Biologic'),
+        ('both', 'Both'),
+    ]
+    INGESTION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('ready', 'Ready'),
+        ('failed', 'Failed'),
+    ]
+
+    name = models.CharField(max_length=255)
+    document_type = models.CharField(max_length=30, choices=DOCUMENT_TYPE_CHOICES, default='other')
+    molecule_type = models.CharField(max_length=20, choices=MOLECULE_TYPE_CHOICES, default='both')
+    phase_relevance = models.JSONField(default=list)
+    file_path = models.CharField(max_length=500)
+    page_count = models.IntegerField(null=True, blank=True)
+    ingestion_status = models.CharField(max_length=20, choices=INGESTION_STATUS_CHOICES, default='pending')
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='rag_documents'
+    )
+    uploaded_by = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class RagChunk(models.Model):
+    document = models.ForeignKey(RagDocument, on_delete=models.CASCADE, related_name='chunks')
+    chunk_index = models.IntegerField()
+    chunk_text = models.TextField()
+    embedding = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['document', 'chunk_index']
+
+    def __str__(self):
+        return f"Chunk {self.chunk_index} of {self.document.name}"
+
+
+# ─── Biologics Models ─────────────────────────────────────────────────────────
+
+class CellLineDevelopment(models.Model):
+    EXPRESSION_SYSTEM_CHOICES = [
+        ('cho', 'CHO (Chinese Hamster Ovary)'),
+        ('hek293', 'HEK293'),
+        ('ecoli', 'E. coli'),
+        ('yeast', 'Yeast (P. pastoris)'),
+        ('baculovirus', 'Baculovirus/Sf9'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('planned', 'Planned'),
+        ('in_progress', 'In Progress'),
+        ('complete', 'Complete'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='cell_line_developments')
+    expression_system = models.CharField(max_length=30, choices=EXPRESSION_SYSTEM_CHOICES)
+    transfection_strategy = models.TextField(blank=True)
+    selection_marker = models.CharField(max_length=100, blank=True)
+    clone_selection_criteria = models.JSONField(default=dict)
+    stability_testing_plan = models.TextField(blank=True)
+    target_expression_level = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cell Line Dev ({self.expression_system}) for {self.project.name}"
+
+
+class BioprocessDevelopment(models.Model):
+    BIOREACTOR_TYPE_CHOICES = [
+        ('stirred_tank', 'Stirred-Tank Bioreactor'),
+        ('wave', 'Wave/Rocking Bioreactor'),
+        ('hollow_fiber', 'Hollow Fiber'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('planned', 'Planned'),
+        ('in_progress', 'In Progress'),
+        ('complete', 'Complete'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='bioprocess_developments')
+    bioreactor_type = models.CharField(max_length=30, choices=BIOREACTOR_TYPE_CHOICES, default='stirred_tank')
+    working_volume_l = models.FloatField(null=True, blank=True)
+    media_composition = models.TextField(blank=True)
+    feed_strategy = models.TextField(blank=True)
+    cpp_ph_target = models.FloatField(null=True, blank=True)
+    cpp_ph_range = models.CharField(max_length=20, blank=True)
+    cpp_do_target_pct = models.FloatField(null=True, blank=True)
+    cpp_temperature_c = models.FloatField(null=True, blank=True)
+    cpp_agitation_rpm = models.IntegerField(null=True, blank=True)
+    cqa_titer_target = models.CharField(max_length=100, blank=True)
+    cqa_viability_target_pct = models.FloatField(null=True, blank=True)
+    process_parameters = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Bioprocess Dev for {self.project.name}"
+
+
+class DownstreamPurification(models.Model):
+    STATUS_CHOICES = [
+        ('planned', 'Planned'),
+        ('in_progress', 'In Progress'),
+        ('complete', 'Complete'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='downstream_purifications')
+    purification_train = models.JSONField(default=list)
+    overall_yield_pct = models.FloatField(null=True, blank=True)
+    final_purity_pct = models.FloatField(null=True, blank=True)
+    viral_clearance_strategy = models.TextField(blank=True)
+    pool_criteria = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Downstream Purification for {self.project.name}"
+
+
+class BiologicsFormulation(models.Model):
+    CONTAINER_CLOSURE_CHOICES = [
+        ('vial', 'Glass Vial'),
+        ('pfs', 'Pre-filled Syringe'),
+        ('cartridge', 'Cartridge'),
+        ('bag', 'Flexible Bag'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('finalized', 'Finalized'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='biologics_formulations')
+    buffer_system = models.CharField(max_length=255, blank=True)
+    ph_target = models.FloatField(null=True, blank=True)
+    ph_range = models.CharField(max_length=20, blank=True)
+    surfactant = models.CharField(max_length=100, blank=True)
+    surfactant_concentration_pct = models.FloatField(null=True, blank=True)
+    stabilizer = models.CharField(max_length=100, blank=True)
+    stabilizer_concentration_mm = models.FloatField(null=True, blank=True)
+    protein_concentration_mgml = models.FloatField(null=True, blank=True)
+    container_closure = models.CharField(max_length=20, choices=CONTAINER_CLOSURE_CHOICES, blank=True)
+    is_lyophilized = models.BooleanField(default=False)
+    lyophilization_design = models.JSONField(default=dict)
+    screening_matrix = models.JSONField(default=list)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Biologics Formulation for {self.project.name}"
+
+
+class BiologicsCharacterizationMethod(models.Model):
+    METHOD_TYPE_CHOICES = [
+        ('sec_hplc', 'SEC-HPLC (Aggregation)'),
+        ('icief', 'icIEF (Charge Variants)'),
+        ('glycan', 'Glycan Analysis'),
+        ('hcp_elisa', 'HCP ELISA'),
+        ('residual_dna', 'Residual DNA'),
+        ('bioassay', 'Bioassay / Cell-Based'),
+        ('spr', 'SPR (Binding Kinetics)'),
+        ('mass_spec', 'Mass Spectrometry'),
+        ('other', 'Other'),
+    ]
+    VALIDATION_STATUS_CHOICES = [
+        ('not_started', 'Not Started'),
+        ('in_progress', 'In Progress'),
+        ('validated', 'Validated'),
+        ('transferred', 'Transferred'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='biologics_methods')
+    method_type = models.CharField(max_length=30, choices=METHOD_TYPE_CHOICES)
+    method_name = models.CharField(max_length=255)
+    analyte = models.CharField(max_length=255, blank=True)
+    instrument = models.CharField(max_length=255, blank=True)
+    acceptance_criteria = models.JSONField(default=dict)
+    validation_status = models.CharField(max_length=20, choices=VALIDATION_STATUS_CHOICES, default='not_started')
+    protocol = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.method_name} ({self.method_type})"
+
+
+class PanelSession(models.Model):
+    """One chat thread per (project, page_type) pair for the per-page AI panel."""
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='panel_sessions')
+    page_type = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('project', 'page_type')
+
+    def __str__(self):
+        return f'Panel({self.page_type}) for {self.project.name}'
+
+
+class PanelMessage(models.Model):
+    ROLE_CHOICES = [('user', 'User'), ('assistant', 'Assistant')]
+
+    session = models.ForeignKey(PanelSession, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    suggestion = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'[{self.role}] {self.content[:60]}'
+
+
+class AppSettings(models.Model):
+    PROVIDER_CHOICES = [
+        ('claude', 'Claude (Anthropic)'),
+        ('openai', 'OpenAI'),
+        ('mistral', 'Mistral'),
+        ('custom', 'Custom Endpoint'),
+    ]
+
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default='claude')
+    model = models.CharField(max_length=100, default='claude-sonnet-4-6')
+    anthropic_api_key = models.CharField(max_length=500, blank=True)
+    openai_api_key = models.CharField(max_length=500, blank=True)
+    mistral_api_key = models.CharField(max_length=500, blank=True)
+    custom_endpoint = models.CharField(max_length=500, blank=True)
+    custom_api_key = models.CharField(max_length=500, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'App Settings'
+
+    @classmethod
+    def get_instance(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return f'App Settings (provider={self.provider}, model={self.model})'

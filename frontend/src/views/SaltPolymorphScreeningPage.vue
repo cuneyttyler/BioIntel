@@ -5,6 +5,7 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { saltScreening } from '@/services/api'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -316,6 +317,19 @@ function loadScreenIntoForm(screen) {
     baseline_notes: screen.baseline_notes || '',
   }
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'SaltPolymorphScreening',
+  projectIdRef: projectIdNum,
+  getEntity: () => ({ ...newScreenForm.value, ...screenForm.value }),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => {
+      if (k in screenForm.value) screenForm.value[k] = v
+      else if (k in newScreenForm.value) newScreenForm.value[k] = v
+    })
+  },
+})
 
 onMounted(load)
 </script>

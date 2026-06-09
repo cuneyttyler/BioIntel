@@ -5,6 +5,7 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { usePreclinicalStore } from '@/stores/preclinical'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -656,6 +657,16 @@ async function doDelete() {
   showDeleteConfirm.value = false
   deleteTargetId.value = null
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'PreclinicalStudyPlanner',
+  projectIdRef: projectIdNum,
+  getEntity: () => (newStudyForm.value),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => { if (k in newStudyForm.value) newStudyForm.value[k] = v })
+  },
+})
 
 onMounted(() => store.fetchStudies(projectId))
 </script>

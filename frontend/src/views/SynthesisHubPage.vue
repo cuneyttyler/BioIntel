@@ -6,6 +6,7 @@ import { useUIStore } from '@/stores/ui'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,6 +145,16 @@ const loadExperiments = async () => {
     experiments.value = (await experimentsApi.list(projectId)).filter(e => e.experiment_type === 'synthesis')
   } catch { experiments.value = [] }
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'SynthesisHub',
+  projectIdRef: projectIdNum,
+  getEntity: () => ({ plan_count: synthPlans.value.length }),
+  applyFn: (s) => {
+    // Synthesis Hub has no editable form fields
+  },
+})
 
 onMounted(async () => {
   try {

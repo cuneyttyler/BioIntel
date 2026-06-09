@@ -1,11 +1,13 @@
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { computed } from 'vue'
 import { useProjectStore } from '@/stores/projects'
+import { useUIStore } from '@/stores/ui'
 
 const route = useRoute()
 const router = useRouter()
 const projectStore = useProjectStore()
+const ui = useUIStore()
 
 const projectId = computed(() => route.params.id || route.query.project || null)
 
@@ -46,6 +48,7 @@ const pageTitle = computed(() => {
     ExcipientLibrary: 'Excipient Library',
     VirtualScreening: 'Virtual Screening',
     TargetProfile: 'Target Profile',
+    Settings: 'Settings',
   }
   return map[route.name] || 'BioIntel'
 })
@@ -59,6 +62,7 @@ function openProject() {
 
 <template>
   <header class="top-bar">
+    <button class="topbar-hamburger" aria-label="Open menu" @click="ui.toggleSidenav()">&#9776;</button>
     <span class="page-title">{{ pageTitle }}</span>
     <span class="spacer" />
 
@@ -69,6 +73,8 @@ function openProject() {
       <span v-if="currentProject.phase" class="topbar-project-phase">{{ currentProject.phase }}</span>
     </div>
 
+    <slot name="actions" />
+    <RouterLink to="/settings" class="topbar-settings-btn" title="Settings">⚙</RouterLink>
     <span class="text-muted text-sm" style="font-size:12px">Drug Development AI</span>
   </header>
 </template>

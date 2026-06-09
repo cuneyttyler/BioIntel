@@ -1,4 +1,28 @@
 from django.urls import path
+from core.views.ai_plan import (
+    ProjectAIPlanView, AIPlanDetailView, AIPlanGenerateView, AIPlanCompressContextView,
+    AIPlanStepDetailView, AIPlanStepApproveView, AIPlanStepRejectView, AIPlanStepSkipView,
+    AIPlanStepRecommendView, AIPlanStepDiscussView, AIPlanStepAnalyzeResultsView,
+    AIPlanStepGoBackView, AIPlanDiscussionListView, AIPlanStepExecuteActionView,
+)
+from core.views.ai_lab import (
+    AILabSessionListCreateView, AILabSessionDetailView,
+    AILabSessionMessageView, AILabSessionCreateProjectView,
+)
+from core.views.ai_panel import AIPanelChatView
+from core.views.panel_history import PanelHistoryView
+from core.views.rag_documents import (
+    RagDocumentListCreateView, RagDocumentDetailView,
+    RagDocumentIngestView, RagDocumentSearchView,
+)
+from core.views.settings_view import AppSettingsView
+from core.views.biologics import (
+    ProjectCellLineView, CellLineDevelopmentDetailView,
+    ProjectBioprocessView, BioprocessDevelopmentDetailView,
+    ProjectPurificationView, DownstreamPurificationDetailView,
+    ProjectBiologicsFormulationView, BiologicsFormulationDetailView,
+    ProjectBiologicsAnalyticsView, BiologicsCharacterizationMethodDetailView,
+)
 from core.views import (
     ProjectListCreateView, ProjectDetailView,
     CompoundSearchView, CompoundListCreateView, CompoundDetailView,
@@ -198,4 +222,51 @@ urlpatterns = [
     path('preclinical-studies/<int:pk>/results/', PreclinicalStudyResultsView.as_view()),
     path('preclinical-studies/<int:pk>/context/', PreclinicalStudyContextView.as_view()),
     path('projects/<int:pk>/admet-dashboard/', ADMETDashboardView.as_view()),
+
+    # ─── v3: AI Plan ─────────────────────────────────────────────────────────
+    path('projects/<int:pk>/ai-plan/', ProjectAIPlanView.as_view()),
+    path('ai-plans/<int:pk>/', AIPlanDetailView.as_view()),
+    path('ai-plans/<int:pk>/generate/', AIPlanGenerateView.as_view()),
+    path('ai-plans/<int:pk>/compress-context/', AIPlanCompressContextView.as_view()),
+    path('ai-plan-steps/<int:pk>/', AIPlanStepDetailView.as_view()),
+    path('ai-plan-steps/<int:pk>/approve/', AIPlanStepApproveView.as_view()),
+    path('ai-plan-steps/<int:pk>/reject/', AIPlanStepRejectView.as_view()),
+    path('ai-plan-steps/<int:pk>/skip/', AIPlanStepSkipView.as_view()),
+    path('ai-plan-steps/<int:pk>/recommend/', AIPlanStepRecommendView.as_view()),
+    path('ai-plan-steps/<int:pk>/discuss/', AIPlanStepDiscussView.as_view()),
+    path('ai-plan-steps/<int:pk>/analyze-results/', AIPlanStepAnalyzeResultsView.as_view()),
+    path('ai-plan-steps/<int:pk>/go-back/', AIPlanStepGoBackView.as_view()),
+    path('ai-plan-steps/<int:pk>/discussions/', AIPlanDiscussionListView.as_view()),
+    path('ai-plan-steps/<int:pk>/execute-action/', AIPlanStepExecuteActionView.as_view()),
+
+    # ─── v3: AI Lab ──────────────────────────────────────────────────────────
+    path('ai-lab/sessions/', AILabSessionListCreateView.as_view()),
+    path('ai-lab/sessions/<int:pk>/', AILabSessionDetailView.as_view()),
+    path('ai-lab/sessions/<int:pk>/messages/', AILabSessionMessageView.as_view()),
+    path('ai-lab/sessions/<int:pk>/create-project/', AILabSessionCreateProjectView.as_view()),
+
+    # ─── v3: Per-page AI Panel ───────────────────────────────────────────────
+    path('projects/<int:pk>/ai-panel/chat/', AIPanelChatView.as_view()),
+    path('projects/<int:pk>/panel-history/<str:page_type>/', PanelHistoryView.as_view()),
+
+    # ─── v3: Document Portal (RAG) ───────────────────────────────────────────
+    path('documents/', RagDocumentListCreateView.as_view()),
+    path('documents/search/', RagDocumentSearchView.as_view()),
+    path('documents/<int:pk>/', RagDocumentDetailView.as_view()),
+    path('documents/<int:pk>/ingest/', RagDocumentIngestView.as_view()),
+
+    # ─── v3: Biologics ───────────────────────────────────────────────────────
+    path('projects/<int:pk>/cell-line/', ProjectCellLineView.as_view()),
+    path('cell-line/<int:pk>/', CellLineDevelopmentDetailView.as_view()),
+    path('projects/<int:pk>/bioprocessing/', ProjectBioprocessView.as_view()),
+    path('bioprocessing/<int:pk>/', BioprocessDevelopmentDetailView.as_view()),
+    path('projects/<int:pk>/purification/', ProjectPurificationView.as_view()),
+    path('purification/<int:pk>/', DownstreamPurificationDetailView.as_view()),
+    path('projects/<int:pk>/biologic-formulation/', ProjectBiologicsFormulationView.as_view()),
+    path('biologic-formulation/<int:pk>/', BiologicsFormulationDetailView.as_view()),
+    path('projects/<int:pk>/biologic-analytics/', ProjectBiologicsAnalyticsView.as_view()),
+    path('biologic-analytics/<int:pk>/', BiologicsCharacterizationMethodDetailView.as_view()),
+
+    # ─── App Settings ─────────────────────────────────────────────────────────
+    path('settings/', AppSettingsView.as_view()),
 ]

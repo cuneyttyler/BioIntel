@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useSARStore } from '@/stores/sar'
+import { useAIPageContext } from '@/composables/useAIPageContext'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -252,6 +253,16 @@ async function confirmDelete() {
   if (selected.value?.id === showDeleteId.value) selected.value = null
   showDeleteId.value = null
 }
+
+const projectIdNum = computed(() => parseInt(projectId))
+useAIPageContext({
+  pageType: 'SARTracker',
+  projectIdRef: projectIdNum,
+  getEntity: () => (newForm.value),
+  applyFn: (s) => {
+    Object.entries(s).forEach(([k, v]) => { if (k in newForm.value) newForm.value[k] = v })
+  },
+})
 
 onMounted(() => store.fetchEntries(projectId))
 </script>
