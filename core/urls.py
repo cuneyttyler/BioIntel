@@ -250,10 +250,10 @@ urlpatterns = [
     path('projects/<int:pk>/panel-history/<str:page_type>/', PanelHistoryView.as_view()),
 
     # ─── v3: Document Portal (RAG) ───────────────────────────────────────────
-    path('documents/', RagDocumentListCreateView.as_view()),
-    path('documents/search/', RagDocumentSearchView.as_view()),
-    path('documents/<int:pk>/', RagDocumentDetailView.as_view()),
-    path('documents/<int:pk>/ingest/', RagDocumentIngestView.as_view()),
+    path('rag-documents/', RagDocumentListCreateView.as_view()),
+    path('rag-documents/search/', RagDocumentSearchView.as_view()),
+    path('rag-documents/<int:pk>/', RagDocumentDetailView.as_view()),
+    path('rag-documents/<int:pk>/ingest/', RagDocumentIngestView.as_view()),
 
     # ─── v3: Biologics ───────────────────────────────────────────────────────
     path('projects/<int:pk>/cell-line/', ProjectCellLineView.as_view()),

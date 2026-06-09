@@ -27,7 +27,7 @@ export const useDocumentsStore = defineStore('documents', {
       this.isLoading = true
       this.error = null
       try {
-        const response = await fetch('/api/documents/', {
+        const response = await fetch('/api/rag-documents/', {
           method: 'POST',
           body: formData,
         })
@@ -40,6 +40,20 @@ export const useDocumentsStore = defineStore('documents', {
         throw e
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async updateDocument(id, data, triggerReIngest = false) {
+      this.error = null
+      try {
+        const doc = await ragApi.update(id, data)
+        const idx = this.documents.findIndex((d) => d.id === id)
+        if (idx !== -1) this.documents[idx] = doc
+        if (triggerReIngest) await this.reIngest(id)
+        return doc
+      } catch (e) {
+        this.error = e?.detail || 'Update failed'
+        throw e
       }
     },
 

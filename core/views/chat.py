@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from core.models import ChatSession, ChatMessage
 from core.serializers import ChatSessionSerializer, ChatSessionListSerializer, ChatMessageSerializer
 from core.services import claude_client
+from core.services.rag import retrieve, format_rag_context
 
 
 class ChatSessionListCreateView(generics.ListCreateAPIView):
@@ -48,11 +49,17 @@ class ChatMessageView(APIView):
         if session.project_id:
             project_context = claude_client.build_project_context(session.project_id)
 
+        rag_chunks = retrieve(
+            query=content,
+            project_id=session.project_id if session.project_id else None,
+        )
+        rag_context = format_rag_context(rag_chunks)
+
         collected_text = []
         collected_sources = []
 
         def generate():
-            for chunk in claude_client.stream_chat(api_messages, project_context):
+            for chunk in claude_client.stream_chat(api_messages, project_context, rag_context, rag_chunks):
                 try:
                     payload = json.loads(chunk.removeprefix('data: ').strip())
                     if payload.get('type') == 'text_delta':

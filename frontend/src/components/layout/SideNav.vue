@@ -127,7 +127,7 @@ function exitProject() {
         </RouterLink>
 
         <div class="nav-phase-header"><span class="nav-stage-num">7</span><span class="nav-lbl">Regulatory & Clinical</span></div>
-        <RouterLink class="nav-link nav-subitem" :to="`/projects/${projectId}/documents`" title="Documents">
+        <RouterLink class="nav-link nav-subitem" :to="`/documents?project=${projectId}`" title="Documents">
           <span class="nav-ico">DC</span><span class="nav-lbl">Documents</span>
         </RouterLink>
       </div>
@@ -163,6 +163,9 @@ function exitProject() {
         </RouterLink>
         <RouterLink class="nav-link" to="/literature" title="Literature">
           <span class="nav-ico">LT</span><span class="nav-lbl">Literature</span>
+        </RouterLink>
+        <RouterLink class="nav-link" :to="`/documents?project=${projectId}`" title="Documents">
+          <span class="nav-ico">DC</span><span class="nav-lbl">Documents</span>
         </RouterLink>
       </div>
     </template>

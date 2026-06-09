@@ -83,6 +83,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # e.g. /assets/main.js  →  frontend/dist/assets/main.js
 WHITENOISE_ROOT = BASE_DIR / 'frontend' / 'dist'
 
+# User-uploaded documents (Document Portal).
+# Dev: <project_root>/media/  — override with MEDIA_ROOT env var in production.
+MEDIA_ROOT = Path(config('MEDIA_ROOT', default=str(BASE_DIR / 'media')))
+MEDIA_URL = '/media/'
+
+# RAG corpus (ICH guidelines + academic papers ingested at deploy).
+# Dev: <project_root>/rag_corpus/  — override with RAG_CORPUS_DIR env var in production.
+RAG_CORPUS_DIR = Path(config('RAG_CORPUS_DIR', default=str(BASE_DIR / 'rag_corpus')))
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
@@ -104,5 +113,9 @@ CORS_ALLOW_HEADERS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
-    'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',
+    ],
 }

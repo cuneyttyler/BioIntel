@@ -10,6 +10,7 @@ export const useChatStore = defineStore('chat', {
     isStreaming: false,
     toolCalls: [],
     sources: [],
+    ragChunks: [],
     error: null,
   }),
 
@@ -49,6 +50,7 @@ export const useChatStore = defineStore('chat', {
       this.streamingText = ''
       this.toolCalls = []
       this.sources = []
+      this.ragChunks = []
       this.isStreaming = true
       this.error = null
 
@@ -67,6 +69,11 @@ export const useChatStore = defineStore('chat', {
             this.toolCalls.push({ type: 'result', name: event.name })
           } else if (event.type === 'sources') {
             this.sources = event.sources || []
+          } else if (event.type === 'rag_citation') {
+            this.ragChunks = event.chunks || []
+            const uniqueDocs = [...new Set(this.ragChunks.map((c) => c.document))]
+            const ragSources = uniqueDocs.map((name) => ({ api: name, type: 'rag' }))
+            this.sources.push(...ragSources)
           } else if (event.type === 'message_stop') {
             this.messages.push({
               role: 'assistant',

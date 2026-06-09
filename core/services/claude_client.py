@@ -386,12 +386,17 @@ def build_project_context(project_id: int) -> str:
         return ''
 
 
-def stream_chat(messages: list, project_context: str = ''):
+def stream_chat(messages: list, project_context: str = '', rag_context: str = '', rag_chunks: list = None):
     provider, model, api_key, custom_endpoint = get_active_llm_config()
 
     system = SYSTEM_PROMPT
     if project_context:
         system += f'\n\n--- CURRENT PROJECT CONTEXT ---\n{project_context}'
+    if rag_context:
+        system += '\n\n' + rag_context
+
+    if rag_chunks:
+        yield f'data: {json.dumps({"type": "rag_citation", "chunks": rag_chunks})}\n\n'
 
     if provider != 'claude':
         base_url = MISTRAL_BASE_URL if provider == 'mistral' else custom_endpoint

@@ -43,7 +43,7 @@
 
         <!-- RAG citations -->
         <div v-if="ragCitations.length" class="rag-bar">
-          <span v-for="(c, i) in ragCitations" :key="i" class="rag-pill">{{ c.document }}</span>
+          <span v-for="name in [...new Set(ragCitations.map(c => c.document))]" :key="name" class="rag-pill">{{ name }}</span>
         </div>
       </div>
 

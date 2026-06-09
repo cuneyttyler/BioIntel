@@ -123,12 +123,30 @@ const deleteSession = async (id) => {
               <div v-if="msg.sources?.length" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
                 <details>
                   <summary class="text-muted text-sm" style="cursor:pointer">Sources ({{ msg.sources.length }})</summary>
-                  <div class="flex gap-2" style="flex-wrap:wrap;margin-top:6px">
-                    <span v-for="s in msg.sources" :key="s.api" class="badge badge-completed">{{ s.api }}</span>
+                  <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+                    <div v-if="msg.sources.filter(s => s.type === 'rag').length" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                      <span class="text-muted text-sm" style="white-space:nowrap">📚 Knowledge base:</span>
+                      <span v-for="s in msg.sources.filter(s => s.type === 'rag')" :key="s.api" class="badge" style="background:#ede9fe;color:#6d28d9">{{ s.api }}</span>
+                    </div>
+                    <div v-if="msg.sources.filter(s => s.type !== 'rag').length" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                      <span class="text-muted text-sm" style="white-space:nowrap">🔧 Tools:</span>
+                      <span v-for="s in msg.sources.filter(s => s.type !== 'rag')" :key="s.api" class="badge badge-completed">{{ s.api }}</span>
+                    </div>
                   </div>
                 </details>
               </div>
             </div>
+          </div>
+
+          <!-- RAG retrieval indicator (fires before text starts) -->
+          <div v-if="chatStore.ragChunks.length && chatStore.isStreaming" class="rag-live-indicator">
+            <span class="rag-live-icon">📚</span>
+            <span class="rag-live-label">Retrieved from knowledge base:</span>
+            <span
+              v-for="name in [...new Set(chatStore.ragChunks.map(c => c.document))]"
+              :key="name"
+              class="rag-live-doc"
+            >{{ name }}</span>
           </div>
 
           <!-- Streaming message -->
@@ -167,3 +185,29 @@ const deleteSession = async (id) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.rag-live-indicator {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
+  border-radius: 8px;
+  font-size: 12px;
+  animation: fade-in 0.2s ease;
+}
+.rag-live-icon { font-size: 14px; }
+.rag-live-label { color: #6d28d9; font-weight: 600; white-space: nowrap; }
+.rag-live-doc {
+  background: #fff;
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+@keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+</style>

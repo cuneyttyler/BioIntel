@@ -21,6 +21,9 @@ class RagDocumentListCreateView(generics.ListCreateAPIView):
         doc_type = self.request.query_params.get('document_type')
         if doc_type:
             qs = qs.filter(document_type=doc_type)
+        name = self.request.query_params.get('name')
+        if name:
+            qs = qs.filter(name__icontains=name)
         return qs
 
     def create(self, request, *args, **kwargs):
@@ -28,7 +31,7 @@ class RagDocumentListCreateView(generics.ListCreateAPIView):
         if not uploaded_file:
             return Response({'error': 'file required'}, status=400)
 
-        upload_dir = os.path.join(settings.MEDIA_ROOT, 'rag_documents')
+        upload_dir = os.path.join(str(settings.MEDIA_ROOT), 'rag_documents')
         os.makedirs(upload_dir, exist_ok=True)
         file_path = os.path.join(upload_dir, uploaded_file.name)
 
@@ -53,9 +56,10 @@ class RagDocumentListCreateView(generics.ListCreateAPIView):
         return Response(RagDocumentSerializer(doc).data, status=201)
 
 
-class RagDocumentDetailView(generics.RetrieveDestroyAPIView):
+class RagDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = RagDocument.objects.all()
     serializer_class = RagDocumentSerializer
+    http_method_names = ['get', 'patch', 'delete', 'head', 'options']
 
 
 class RagDocumentIngestView(APIView):

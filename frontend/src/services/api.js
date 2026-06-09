@@ -283,11 +283,12 @@ export const aiLab = {
 }
 
 export const ragDocuments = {
-  list: (params) => api.get('/documents/', { params }),
-  get: (id) => api.get(`/documents/${id}/`),
-  delete: (id) => api.delete(`/documents/${id}/`),
-  search: (params) => api.get('/documents/search/', { params }),
-  ingest: (id) => api.post(`/documents/${id}/ingest/`),
+  list: (params) => api.get('/rag-documents/', { params }),
+  get: (id) => api.get(`/rag-documents/${id}/`),
+  update: (id, data) => api.patch(`/rag-documents/${id}/`, data),
+  delete: (id) => api.delete(`/rag-documents/${id}/`),
+  search: (params) => api.get('/rag-documents/search/', { params }),
+  ingest: (id) => api.post(`/rag-documents/${id}/ingest/`),
 }
 
 export const biologics = {

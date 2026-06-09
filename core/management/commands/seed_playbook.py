@@ -20,7 +20,7 @@ class Command(BaseCommand):
         parser.add_argument('--force', action='store_true', help='Re-ingest documents already marked ready')
 
     def handle(self, *args, **options):
-        playbook_dir = os.path.join(settings.BASE_DIR, 'core', 'data', 'playbook')
+        playbook_dir = str(settings.RAG_CORPUS_DIR)
 
         if not os.path.isdir(playbook_dir):
             self.stderr.write(

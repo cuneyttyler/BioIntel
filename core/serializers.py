@@ -356,7 +356,7 @@ class RagDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = RagDocument
         fields = '__all__'
-        read_only_fields = ('created_at', 'ingestion_status', 'page_count')
+        read_only_fields = ('created_at', 'ingestion_status', 'page_count', 'file_path', 'uploaded_by')
 
     def get_chunk_count(self, obj):
         return obj.chunks.count()

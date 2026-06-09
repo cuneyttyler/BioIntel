@@ -1,0 +1,1 @@
+There are existing tools for AI-Assisted Drug Discovery. A few of these are BenevolentAI, HealX and Atomwise. Also, there is Microsoft Research on protein design called (EvoDiff) described in
