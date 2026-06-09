@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>[#EPMLSTRACC-143] Add document management page and make AI Agent consume those documents in RAG.</title>
+    <meta http-equiv="Content-Type" Content="application/vnd.ms-word; charset=UTF-8">
+        <style type="text/css">
+
+.tableBorder, .grid
+{
+    background-color: #fff;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tableBorder td, .grid td
+{
+    vertical-align: top;
+    padding: 2px;
+    border: 1px solid #ccc;
+}
+
+.noPadding
+{
+    padding: 0 !important;
+}
+
+h3 .subText
+{
+    font-size: 60%;
+    font-weight: normal;
+}
+
+.tabLabel
+{
+    font-weight: bold;
+    border: 1px solid #ccc;
+    border-bottom:none;
+    padding: 2px;
+    display: inline;
+}
+
+td.blank
+{
+    padding: 0;
+    margin: 0;
+}
+
+.blank td
+{
+    border: none;
+}
+
+#descriptionArea
+{
+    margin: 0;
+    padding: 2px;
+    border: 1px solid #ccc;
+}
+
+hr
+{
+    border-top:1px solid #aaa;
+}
+
+hr.fullcontent
+{
+  height: 15px;
+  padding: 10px 0;
+  background: #fff url('https://jiraeu.epam.com/images/icons/hr.gif') no-repeat scroll center;
+}
+
+</style>
+
+</head>
+<body>
+
+<table class="tableBorder" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td bgcolor="#f0f0f0" width="100%" colspan="2" valign="top">
+                            <h3 class="formtitle">
+                        [EPMLSTRACC-143]&nbsp;<a href="https://jiraeu.epam.com/browse/EPMLSTRACC-143">Add document management page and make AI Agent consume those documents in RAG.</a>
+            <span class="subText">
+               Created: 9/Jun/26                   &nbsp;Updated: 9/Jun/26
+
+                                    &nbsp;Due: 9/Jun/26
+                                            </span>
+            </h3>
+        </td>
+    </tr>
+    <tr>
+        <td width="20%"><b>Status:</b></td>
+        <td width="80%">Open</td>
+    </tr>
+    <tr>
+        <td width="20%"><b>Project:</b></td>
+        <td width="80%"><a href="https://jiraeu.epam.com/secure/BrowseProject.jspa?id=83523">LS Accelerators</a></td>
+    </tr>
+
+        <tr>
+            <td><b>Component/s:</b></td>
+            <td>
+                            None
+                </td>
+    </tr>
+    
+
+        <tr>
+            <td><b>Affects Version/s:</b></td>
+            <td>
+                            None
+                </td>
+    </tr>
+    
+
+        <tr>
+            <td><b>Fix Version/s:</b></td>
+            <td>
+                            None
+                </td>
+    </tr>
+    
+    </table>
+
+<br />
+<table class="grid" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td bgcolor="#f0f0f0" valign="top" width="20%">
+            <b>Type:</b>
+        </td>
+        <td bgcolor="#ffffff" valign="top"  width="30%" >
+            Task
+        </td>
+
+                    <td bgcolor="#f0f0f0">
+                <b>Priority:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top" nowrap>
+                Low
+            </td>
+            </tr>
+    <tr>
+                        <td bgcolor="#f0f0f0" valign="top" width="20%">
+                <b>Reporter:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top"  width="30%" >
+                                            <a class="user-hover" rel="cuneyt_yavuz@epam.com" id="word_reporter_cuneyt_yavuz@epam.com" href="https://jiraeu.epam.com/secure/ViewProfile.jspa?name=cuneyt_yavuz%40epam.com">Cuneyt Yavuz</a>
+                            </td>
+        
+                    <td bgcolor="#f0f0f0" width="20%">
+                <b>Assignee:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top" nowrap  width="30%" >
+                                            <a class="user-hover" rel="cuneyt_yavuz@epam.com" id="word_assignee_cuneyt_yavuz@epam.com" href="https://jiraeu.epam.com/secure/ViewProfile.jspa?name=cuneyt_yavuz%40epam.com">Cuneyt Yavuz</a>
+                            </td>
+            </tr>
+    	<tr>
+		<td bgcolor="#f0f0f0" width="20%">
+			<b>Resolution:</b>
+		</td>
+		<td bgcolor="#ffffff" valign="top" width="30%" nowrap>
+            				Unresolved
+                    </td>
+                    <td bgcolor="#f0f0f0" width="20%">
+                <b>Votes:</b>
+            </td>
+            <td bgcolor="#ffffff" valign="top" width="30%" nowrap>
+                0
+            </td>
+        
+    </tr>
+    
+        <tr>
+        <td bgcolor="#f0f0f0" width="20%">
+            <b>Labels:</b>
+        </td>
+        <td id="labels-14105135-value" class="value" bgcolor="#ffffff" valign="top" colspan="3" nowrap>
+                            GUI, backend, database, llm, rag                    </td>
+    </tr>
+    
+    	<tr>
+        		<td bgcolor="#f0f0f0" width="20%"><b>Remaining Estimate:</b></td>
+        <td bgcolor="#ffffff" valign="top" nowrap width="80%" colspan="3">
+                            8h
+            		</td>
+    </tr>
+    <tr>
+                <td bgcolor="#f0f0f0" width="20%"><b>Time Spent:</b></td>
+		<td bgcolor="#ffffff" valign="top" nowrap width="80%" colspan="3">
+                            Not Specified
+            		</td>
+	</tr>
+    <tr>
+                <td bgcolor="#f0f0f0" width="20%"><b>Original Estimate:</b></td>
+		<td bgcolor="#ffffff" valign="top" nowrap width="80%" colspan="3">
+                            8h
+            		</td>
+    </tr>
+    
+    </table>
+
+
+
+    <br />
+
+    	<table class="grid" cellpadding="0" cellspacing="0" border="0" width="100%">
+            
+
+        
+    
+
+
+
+                        <tr>
+                <td bgcolor="#f0f0f0" width="20%" valign="top"><b>Type:</b></td>
+                <td id="customfield_15114-14105135-value" class="value" bgcolor="#ffffff" width="80%">    Usability
+</td>
+            </tr>
+                                <tr>
+                <td bgcolor="#f0f0f0" width="20%" valign="top"><b>Start Date:</b></td>
+                <td id="customfield_21912-14105135-value" class="value" bgcolor="#ffffff" width="80%">          <span title="9/Jun/26"><time datetime="2026-06-09">9/Jun/26</time></span>
+    </td>
+            </tr>
+                                <tr>
+                <td bgcolor="#f0f0f0" width="20%" valign="top"><b>Epic Link:</b></td>
+                <td id="customfield_14500-14105135-value" class="value" bgcolor="#ffffff" width="80%">
+    <a class="aui-label ghx-label-8" href="https://jiraeu.epam.com/browse/EPMLSTRACC-140">
+        AI Drug Development Platform POC
+    </a>
+</td>
+            </tr>
+                                                </table>
+
+    <br/>
+
+    <table cellpadding="2" cellspacing="0" border="0" width="100%" align="center">
+    <tr>
+        <td bgcolor="#bbbbbb" width="1%" nowrap align="center">
+            &nbsp;<font color="#ffffff"><b>Description</b></font>&nbsp;
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+    </table>
+
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td id="descriptionArea">
+            <p>Companies have a lot of documents regarding their process, projects or individual drug development works. To provide an interface, a new document management page will be added.</p>
+
+<p> </p>
+
+<p>A document can be top-level or project-specific. In main page, document management link will appear in left panel. Through main page, document management platform will show documents by project or with no filter.</p>
+
+<p> </p>
+
+<p>In project mode(when workflow appears in left panel), there will be a document management link in left panel again. Through project workflow, document management page will show only documents that are under selected project.</p>
+
+<p> </p>
+
+<p>RAG system will consume these documents during chat. When a project is selected, it will consume documents that are connected to that project and documents that are top-level (no projects). It will be informed if the document is connected to the project or not.</p>
+
+<p> </p>
+
+<p>When a project is not selected, RAG system will include all documents from all projects and top-level (no project) documents.</p>
+
+<p> </p>
+
+<p>Components:</p>
+<ul>
+	<li>Document management Page: Includes "Upload Document" button which shows document upload panel on click. Also, existing documents table, filterable by document fields.</li>
+	<li>Document Upload Panel: Includes fields: File, Title, Category, Project</li>
+	<li>Document Table: Showing existing documents (filter by title, category, project)</li>
+</ul>
+
+
+<p> </p>
+
+<p>Tests:</p>
+
+<p> </p>
+
+<p>User's can upload new documents to the platform.</p>
+
+<p>User's can see and filter existing documents.</p>
+
+<p>When project is not selected, users can see all documents in the platform.</p>
+
+<p>When project is selected, users can see only the documents in the project.</p>
+
+<p>When project is not selected, RAG system includes all documents in the platform.</p>
+
+<p>When project is selected, RAG system only includes documents that are connected to the project and the documents with no projects.</p>
+            <br/>
+        </td>
+    </tr>
+    </table>
+
+Generated at Tue Jun 09 10:03:00 GMT 2026 by Cuneyt Yavuz using Jira 10.3.21#10030021-sha1:1b57c64b79893799c54a69ac24cc209127fad1fe.
+
+</body>
+</html>
